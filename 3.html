@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Modern Layout Testi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Oswald:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #0ea5e9; /* Sky Blue */
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --line-color: #334155;
+        }
+
+        body {
+            background-color: #000;
+            font-family: 'Inter', sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 50px; padding: 40px; color: var(--text-main);
+        }
+
+        .slide-frame {
+            width: 1100px; height: 600px;
+            border: 1px dashed #444; position: relative;
+            background: var(--bg-dark); overflow: hidden;
+            padding: 40px; box-sizing: border-box;
+            display: flex; flex-direction: column;
+        }
+
+        .label {
+            position: absolute; top: 0; left: 0;
+            background: #222; padding: 5px 15px;
+            color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        h2 { margin-top: 0; font-family: 'Oswald', sans-serif; font-size: 32px; letter-spacing: 0.5px; }
+
+        /* ============================================================
+           1. BENTO GRID (ASİMETRİK IZGARA)
+           Kullanım: Özellik tanıtımı, Proje özeti.
+           Yapı: Sol tarafta büyük bir ana kutu, sağda 2 küçük kutu.
+           ============================================================ */
+        .bento-wrapper {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr; /* Sol geniş, sağ dar */
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .b-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid var(--line-color);
+            display: flex; flex-direction: column; justify-content: center;
+            transition: 0.2s;
+        }
+
+        /* Ana Kutu (Sol taraf, 2 satır kaplar) */
+        .b-main {
+            grid-row: 1 / 3; /* 1'den 3'e kadar (tüm yükseklik) */
+            background: linear-gradient(145deg, var(--bg-card), #253346);
+            border-left: 6px solid var(--accent);
+        }
+
+        .b-side {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .b-icon {
+            font-size: 32px; color: var(--accent); margin-bottom: 20px;
+            background: rgba(14, 165, 233, 0.1); width: 60px; height: 60px;
+            display: flex; align-items: center; justify-content: center; border-radius: 12px;
+        }
+
+        .b-title { font-size: 24px; font-weight: 800; margin-bottom: 15px; color: #fff; }
+        .b-text { font-size: 16px; color: var(--text-muted); line-height: 1.6; }
+
+        .b-side .b-title { font-size: 18px; margin-bottom: 10px; }
+        .b-side .b-text { font-size: 14px; }
+        .b-side .b-icon { width: 40px; height: 40px; font-size: 20px; margin-bottom: 15px; }
+
+
+        /* ============================================================
+           2. VERTICAL JOURNEY (DİKEY YOLCULUK/SÜREÇ)
+           Kullanım: Yöntem, Adımlar, Ajanda.
+           Yapı: Sol tarafta çizgi, sağda içerik blokları. Timeline'ın daha temiz hali.
+           ============================================================ */
+        .v-journey-wrapper {
+            display: flex; flex-direction: column;
+            justify-content: center; height: 100%; gap: 0;
+            padding-left: 20px;
+        }
+
+        .v-step {
+            display: flex; gap: 20px;
+            position: relative;
+            padding-bottom: 30px; /* Alt boşluk */
+        }
+
+        .v-step:last-child { padding-bottom: 0; }
+
+        /* Dikey Çizgi */
+        .v-line {
+            position: absolute; left: 14px; top: 0; bottom: 0;
+            width: 2px; background: var(--line-color);
+            z-index: 0;
+        }
+        /* Son elemanda çizgi olmasın (veya kısa olsun) */
+        .v-step:last-child .v-line { display: none; }
+
+        .v-marker {
+            width: 30px; height: 30px;
+            background: var(--bg-dark);
+            border: 2px solid var(--accent-purple);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: bold; color: var(--accent-purple);
+            z-index: 1; flex-shrink: 0;
+        }
+
+        .v-content {
+            background: var(--bg-card);
+            padding: 15px 20px;
+            border-radius: 0 12px 12px 12px;
+            border-left: 2px solid var(--accent-purple);
+            flex: 1;
+        }
+
+        .v-head { font-weight: bold; font-size: 16px; color: var(--text-main); margin-bottom: 5px; }
+        .v-desc { font-size: 14px; color: var(--text-muted); }
+
+
+        /* ============================================================
+           3. FOCUS CARDS (ODAK KARTLARI)
+           Kullanım: 3 Ana Madde, 3 Temel İlke.
+           Yapı: Dikey şeritler. Üstte renkli şerit, altta içerik.
+           ============================================================ */
+        .focus-wrapper {
+            display: flex; gap: 20px; height: 100%; align-items: stretch;
+        }
+
+        .focus-card {
+            flex: 1;
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--line-color);
+            display: flex; flex-direction: column;
+        }
+
+        /* Renkli Üst Başlık */
+        .focus-header {
+            padding: 20px;
+            font-weight: 800; font-size: 18px; color: #fff;
+            text-transform: uppercase; letter-spacing: 1px;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .fh-1 { background: var(--accent); }
+        .fh-2 { background: var(--accent-purple); }
+        .fh-3 { background: var(--accent-pink); }
+
+        .focus-body {
+            padding: 25px; flex: 1;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+
+        .focus-text { font-size: 15px; line-height: 1.6; color: var(--text-muted); flex: 1; }
+
+        .focus-stat {
+            margin-top: auto; padding-top: 15px; border-top: 1px solid var(--line-color);
+            font-size: 24px; font-weight: 700; color: var(--text-main);
+        }
+        .focus-stat span { font-size: 12px; font-weight: normal; color: var(--text-muted); display: block; }
+
+    </style>
+</head>
+<body>
+
+    <div class="slide-frame">
+        <div class="label">1. Bento Grid (Öne Çıkarılan İçerik)</div>
+        <h2 contenteditable="true">Proje Özeti ve Temel Özellikler</h2>
+
+        <div class="bento-wrapper">
+            <div class="b-card b-main">
+                <div class="b-icon"><i class="fas fa-rocket"></i></div>
+                <div class="b-title" contenteditable="true">AI Destekli Otomasyon</div>
+                <div class="b-text" contenteditable="true">
+                    Bu sistem, vardiya planlama süreçlerini %90 oranında otomatikleştirir.
+                    Manuel hataları ortadan kaldırır ve adalet algısını maksimum seviyeye çıkarır.
+                    Karmaşık kısıtları saniyeler içinde çözer.
+                </div>
+            </div>
+
+            <div class="b-card b-side">
+                <div class="b-icon"><i class="fas fa-bolt"></i></div>
+                <div class="b-title" contenteditable="true">Hızlı İşlem</div>
+                <div class="b-text" contenteditable="true">Eskiden 3 gün süren planlama artık 15 dakika.</div>
+            </div>
+
+            <div class="b-card b-side">
+                <div class="b-icon"><i class="fas fa-shield-alt"></i></div>
+                <div class="b-title" contenteditable="true">Tam Güvenlik</div>
+                <div class="b-text" contenteditable="true">KVKK uyumlu veri saklama ve şifreli iletişim.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide-frame">
+        <div class="label">2. Vertical Journey (Akış / Yöntem)</div>
+        <h2 contenteditable="true">Geliştirme Metodolojisi</h2>
+
+        <div class="v-journey-wrapper">
+            <div class="v-step">
+                <div class="v-line"></div>
+                <div class="v-marker">1</div>
+                <div class="v-content">
+                    <div class="v-head" contenteditable="true">Veri Toplama</div>
+                    <div class="v-desc" contenteditable="true">Geçmiş vardiya verileri ve çalışan tercihleri sisteme yüklenir.</div>
+                </div>
+            </div>
+
+            <div class="v-step">
+                <div class="v-line"></div>
+                <div class="v-marker">2</div>
+                <div class="v-content">
+                    <div class="v-head" contenteditable="true">Model Eğitimi & Fine-Tuning</div>
+                    <div class="v-desc" contenteditable="true">OpenAI modeli, işletme kurallarına göre özelleştirilir.</div>
+                </div>
+            </div>
+
+            <div class="v-step">
+                <div class="v-line"></div>
+                <div class="v-marker">3</div>
+                <div class="v-content">
+                    <div class="v-head" contenteditable="true">Test ve Validasyon</div>
+                    <div class="v-desc" contenteditable="true">Oluşturulan çizelgeler, kısıt programlama ile doğrulanır.</div>
+                </div>
+            </div>
+
+            <div class="v-step">
+                <div class="v-line"></div>
+                <div class="v-marker">4</div>
+                <div class="v-content">
+                    <div class="v-head" contenteditable="true">Canlıya Geçiş</div>
+                    <div class="v-desc" contenteditable="true">Sistem pilot mağazalarda kullanıma açılır.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide-frame">
+        <div class="label">3. Focus Cards (3 Ana Madde)</div>
+        <h2 contenteditable="true">Temel Performans Göstergeleri</h2>
+
+        <div class="focus-wrapper">
+            <div class="focus-card">
+                <div class="focus-header fh-1"><i class="fas fa-check-circle"></i> Doğruluk</div>
+                <div class="focus-body">
+                    <div class="focus-text" contenteditable="true">
+                        Modelin yasal ve operasyonel kısıtları karşılama oranı. Hata payı minimize edilmiştir.
+                    </div>
+                    <div class="focus-stat">99.8% <span>Başarı Oranı</span></div>
+                </div>
+            </div>
+
+            <div class="focus-card">
+                <div class="focus-header fh-2"><i class="fas fa-clock"></i> Hız</div>
+                <div class="focus-body">
+                    <div class="focus-text" contenteditable="true">
+                        Manuel planlamaya kıyasla harcanan zamanın azaltılması. Operasyonel verimlilik artışı.
+                    </div>
+                    <div class="focus-stat">12x <span>Daha Hızlı</span></div>
+                </div>
+            </div>
+
+            <div class="focus-card">
+                <div class="focus-header fh-3"><i class="fas fa-smile"></i> Memnuniyet</div>
+                <div class="focus-body">
+                    <div class="focus-text" contenteditable="true">
+                        Çalışanların vardiya adaletine duyduğu güvenin anket skorlarına yansıması.
+                    </div>
+                    <div class="focus-stat">4.8/5 <span>Puan</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout 2: Final Structured</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Inter:wght@400;600&display=swap');
+
+        :root {
+            --bg-color: #F8F9FA; --surface-color: #FFFFFF; --primary-color: #111827; --text-body: #4B5563;
+            --accent-color: #EA580C; --border-color: #E5E7EB; --selection-color: #EF4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        body { font-family: 'Inter', sans-serif; background-color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+        .slide-container { width: 1280px; height: 720px; background-color: var(--bg-color); position: relative; padding: 60px 80px; display: flex; flex-direction: column; }
+
+        /* Grid Yapısı */
+        .grid-wrapper { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; height: 100%; align-content: center; overflow-y: auto; }
+
+        .research-card {
+            background-color: var(--surface-color); border: 1px solid var(--border-color); padding: 30px; display: flex; flex-direction: column;
+            transition: all 0.3s ease; position: relative; height: 100%;
+        }
+
+        .card-icon {
+            width: 40px; height: 40px; background: rgba(0,0,0,0.05); color: var(--accent-color);
+            display: flex; align-items: center; justify-content: center; border-radius: 8px;
+            font-size: 18px; font-weight: 700; margin-bottom: 20px; font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .card-title { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: var(--primary-color); margin-bottom: 10px; }
+        .card-desc { font-size: 14px; color: var(--text-body); line-height: 1.6; flex-grow: 1; }
+        .card-footer { margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--border-color); font-size: 13px; font-weight: 600; color: var(--accent-color); }
+
+        [contenteditable="true"]:hover { background: rgba(0,0,0,0.05); cursor: text; border-radius: 4px; }
+        .selectable { cursor: pointer; border: 2px solid transparent; }
+        .selected-element { border: 2px solid var(--selection-color) !important; transform: scale(0.98); }
+
+        .editor-tools { position: absolute; top: 20px; right: 20px; background: #222; padding: 10px; border-radius: 8px; display: flex; gap: 10px; z-index: 999; }
+        .tool-btn { background: #444; color: #fff; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="editor-tools">
+        <button class="tool-btn" onclick="addCard()">+ Kart Ekle</button>
+        <button class="tool-btn" onclick="setTheme('#EA580C')">Turuncu</button>
+        <button class="tool-btn" onclick="setTheme('#2563EB')">Mavi</button>
+    </div>
+
+    <div class="slide-container">
+        <h1 style="font-size: 36px; margin-bottom: 40px;" contenteditable="true">Literatür Taraması</h1>
+        <div class="grid-wrapper" id="gridContainer">
+            <div class="research-card selectable">
+                <div class="card-icon">01</div> <h3 class="card-title" contenteditable="true">Manuel Yöntemler</h3>
+                <p class="card-desc" contenteditable="true">Geleneksel yöntemlerde hata oranı yüksektir.</p>
+                <div class="card-footer" contenteditable="true">Sonuç: Yetersiz</div>
+            </div>
+            <div class="research-card selectable">
+                <div class="card-icon">02</div>
+                <h3 class="card-title" contenteditable="true">Tam Sayılı Programlama</h3>
+                <p class="card-desc" contenteditable="true">Matematiksel kesin çözüm hedefler.</p>
+                <div class="card-footer" contenteditable="true">Sonuç: %100 Uyum</div>
+            </div>
+            <div class="research-card selectable">
+                <div class="card-icon">03</div>
+                <h3 class="card-title" contenteditable="true">Sezgisel Algoritmalar</h3>
+                <p class="card-desc" contenteditable="true">Hızlıdır ancak optimal sonucu garanti etmez.</p>
+                <div class="card-footer" contenteditable="true">Sonuç: Kesin Değil</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setTheme(color) { document.documentElement.style.setProperty('--accent-color', color); }
+        function reindexCards() {
+            document.querySelectorAll('.research-card').forEach((card, index) => {
+                let num = index + 1;
+                card.querySelector('.card-icon').innerText = num < 10 ? '0' + num : num;
+            });
+        }
+        function addCard() {
+            const container = document.getElementById('gridContainer');
+            const newCard = document.createElement('div');
+            newCard.className = 'research-card selectable';
+            newCard.innerHTML = `<div class="card-icon">00</div><h3 class="card-title" contenteditable="true">Yeni Başlık</h3><p class="card-desc" contenteditable="true">Açıklama.</p><div class="card-footer" contenteditable="true">Sonuç: ...</div>`;
+            newCard.addEventListener('click', selectElement);
+            container.appendChild(newCard);
+            reindexCards();
+        }
+        let selectedElement = null;
+        function selectElement(e) {
+            if (e.target.isContentEditable) return;
+            if (selectedElement) selectedElement.classList.remove('selected-element');
+            selectedElement = e.currentTarget; selectedElement.classList.add('selected-element'); e.stopPropagation();
+        }
+        document.querySelectorAll('.selectable').forEach(el => el.addEventListener('click', selectElement));
+        document.addEventListener('click', (e) => {
+            if (selectedElement && !e.target.closest('.selectable') && !e.target.closest('.editor-tools')) {
+                selectedElement.classList.remove('selected-element'); selectedElement = null;
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if ((e.key === 'Delete' || e.key === 'Backspace') && selectedElement) {
+                selectedElement.remove(); selectedElement = null; reindexCards();
+            }
+        });
+        document.addEventListener('DOMContentLoaded', reindexCards);
+    </script>
+</body>
+</html>

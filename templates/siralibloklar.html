@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Layout 20: Numbered Blocks</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        :root { --bg: #0F172A; --card: #1E293B; --text: #F8FAFC; --accent: #38BDF8; }
+        body { font-family: 'Inter', sans-serif; background: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+
+        .slide-container {
+            width: 1280px; height: 720px; background: var(--bg); position: relative;
+            padding: 60px 100px; display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        .header { margin-bottom: 40px; }
+        .h-title { font-size: 42px; color: white; font-weight: 700; margin: 0; }
+
+        .blocks-container {
+            display: flex; flex-direction: column; gap: 20px; flex-grow: 1; justify-content: center;
+        }
+
+        .num-block {
+            display: flex; align-items: center; background: var(--card);
+            padding: 20px 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.2s; cursor: pointer;
+        }
+        .num-block:hover { transform: translateX(10px); border-color: var(--accent); }
+        .num-block.selected { border: 2px solid #EF4444; }
+
+        .big-num {
+            font-size: 48px; font-weight: 900; color: var(--accent); margin-right: 30px;
+            opacity: 0.8; line-height: 1; min-width: 60px;
+        }
+
+        .block-content { flex: 1; }
+        .block-title { font-size: 20px; font-weight: 700; color: white; margin: 0 0 5px 0; }
+        .block-desc { font-size: 16px; color: #94A3B8; margin: 0; }
+
+        [contenteditable]:focus { outline: none; }
+        .toolbar { position: absolute; top: 20px; right: 20px; z-index: 999; display: flex; gap: 10px; }
+        .btn { background: #444; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <button class="btn" onclick="addBlock()">+ Madde Ekle</button>
+    <button class="btn" onclick="setTheme('#38BDF8')">Mavi</button>
+    <button class="btn" onclick="setTheme('#10B981')">Yeşil</button>
+</div>
+
+<div class="slide-container" id="canvas">
+    <div class="header">
+        <h1 class="h-title" contenteditable="true">Stratejik Öncelikler</h1>
+    </div>
+
+    <div class="blocks-container" id="list">
+        </div>
+</div>
+
+<script>
+    function setTheme(color) { document.documentElement.style.setProperty('--accent', color); }
+
+    function addBlock() {
+        const list = document.getElementById('list');
+        const div = document.createElement('div');
+        div.className = 'num-block';
+        div.onclick = function() { selectEl(this) };
+        div.innerHTML = `
+            <div class="big-num">00</div>
+            <div class="block-content">
+                <h3 class="block-title" contenteditable="true">Öncelik Başlığı</h3>
+                <p class="block-desc" contenteditable="true">Detaylı açıklama buraya.</p>
+            </div>
+        `;
+        list.appendChild(div);
+        reindex();
+    }
+
+    function reindex() {
+        document.querySelectorAll('.big-num').forEach((el, index) => {
+            let num = index + 1;
+            el.innerText = num < 10 ? '0' + num : num;
+        });
+    }
+
+    let selected = null;
+    function selectEl(el) {
+        if(selected) selected.classList.remove('selected');
+        selected = el; selected.classList.add('selected');
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if((e.key === 'Delete' || e.key === 'Backspace') && selected && !document.activeElement.isContentEditable) {
+            selected.remove(); selected = null; reindex();
+        }
+    });
+
+    // Başlangıçta 3 tane ekle
+    window.onload = () => { for(let i=0; i<3; i++) addBlock(); };
+</script>
+</body>
+</html>

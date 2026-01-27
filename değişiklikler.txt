@@ -1,0 +1,24 @@
+bitti. Sadece istediðim deðiþiklikleri yapmaný istiyorum. Baþka hiçbir þeye dokunma. Promptlar dahil hiç bir þeyi deðiþtirme, silme. gerekli deðiþikliklerden sonra deðiþiklik yaptýðýn kodlarýn tam halini gönder. Deðiþiklik olmayan kodlarý göndermene gerek yok.
+
+
+1) numbered_list tasarýmýnda tasarýmýn sayýlarý var ve maddelerin kendi sayýlarý da oluyor iki kere ayný sayý yazýlmýþ oluyor. Sadece tasarýmýn sayýlarý yazmalý. 
+
+2) ‘Listeye/Düzene ekle’ için týkladýðýmda tek bir madde/kutu eklesin.
+
+3) Yeni madde ekleme iþareti ile kaldýrma iþareti yan yana olsun. Ýkisi de sol tarafta olsun. Yani ekleme iþaretinin yanýna kaldýrma iþareti gelsin.
+
+4) Arayüz dili ingilizce seçtiðimde ilk giriþ ekranýnýn dilini deðiþtiremiyor muyuz? Ayrýca editör ekranýnda madde ekle gibi özellikler Türkçe yazýyor ingilizce seçtiðimde bile, deðiþtirilmeli. 
+
+5) Giriþ ekranýnda dil seçme seçeneði en üstte olmasýn. Talimat girme üstte olmalý.
+
+6) AtakSlide sunum oluþtur yazýsý ile ayný renkte olsun.
+
+7) Sunumu oluþtur yazýsý yanýndaki emojiyi kaldýr. 
+
+8) Sunum oluþtuktan sonraki ekranda AI yazan kýsýmda yine AtakSlide yazsýn. Emoji istemiyorum. 
+
+
+
+
+
+

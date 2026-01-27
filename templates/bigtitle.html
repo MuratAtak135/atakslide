@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Layout 3: Final Free Big Type</title>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap');
+        :root { --bg: #000000; --text: #FFFFFF; --grad-1: #7928CA; --grad-2: #FF0080; }
+        body { font-family: 'Inter', sans-serif; background: #333; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+
+        #canvas { width: 1280px; height: 720px; background: var(--bg); position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+
+        .movable-box { position: absolute; box-sizing: border-box; border: 1px dashed transparent; display: flex; flex-direction: column; justify-content: center; }
+        .movable-box:hover { border: 1px dashed rgba(255,255,255,0.3); cursor: move; }
+        .movable-box.selected { border: 2px solid #fff !important; z-index: 100; }
+
+        .big-title {
+            font-size: 90px; font-weight: 800; line-height: 1; margin: 0;
+            background: linear-gradient(135deg, var(--grad-1), var(--grad-2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .subtitle { font-size: 24px; color: var(--text); opacity: 0.8; line-height: 1.5; margin: 0; }
+        .editable { outline: none; width: 100%; height: 100%; }
+
+        .image-placeholder { background: #222; border: 1px dashed #555; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #666; border-radius: 12px; }
+
+        .toolbar { position: absolute; top: 20px; right: 20px; background: #222; padding: 10px; border-radius: 8px; z-index: 999; display: flex; gap: 10px; }
+        .btn { background: #444; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <button class="btn" onclick="addText()">+ Yazı</button>
+    <button class="btn" onclick="addImage()">+ Görsel</button>
+    <button class="btn" onclick="setTheme('#7928CA', '#FF0080')">Mor</button>
+    <button class="btn" onclick="setTheme('#FF4D4D', '#F9CB28')">Ateş</button>
+</div>
+
+<div id="canvas">
+    <div class="movable-box" style="transform: translate(80px, 150px); width: 500px; height: 300px;" data-x="80" data-y="150">
+        <h1 class="big-title editable" contenteditable="true">Optimum<br>Çözüm.</h1>
+    </div>
+
+    <div class="movable-box" style="transform: translate(80px, 450px); width: 500px; height: 150px;" data-x="80" data-y="450">
+        <p class="subtitle editable" contenteditable="true">Algoritma %40 verimlilik sağlıyor. Manuel planlamaya son.</p>
+    </div>
+
+    <div class="movable-box" style="transform: translate(650px, 80px); width: 550px; height: 560px;" data-x="650" data-y="80">
+        <div class="image-placeholder">
+            [ Görsel Alanı ]
+        </div>
+    </div>
+</div>
+
+<script>
+    /* STANDART JS */
+    let selectedEl = null;
+    document.getElementById('canvas').addEventListener('mousedown', e => {
+        const box = e.target.closest('.movable-box');
+        if (box) {
+            if (selectedEl) selectedEl.classList.remove('selected');
+            selectedEl = box; selectedEl.classList.add('selected');
+        } else if (e.target.id === 'canvas') {
+            if (selectedEl) selectedEl.classList.remove('selected'); selectedEl = null;
+        }
+    });
+    document.addEventListener('keydown', e => {
+        if ((e.key === 'Delete' || e.key === 'Backspace') && selectedEl && !document.activeElement.isContentEditable) {
+            selectedEl.remove(); selectedEl = null;
+        }
+    });
+    interact('.movable-box').draggable({
+        inertia: true, ignoreFrom: '[contenteditable="true"]:focus',
+        modifiers: [interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true })],
+        autoScroll: true, listeners: { move: dragMoveListener }
+    }).resizable({
+        edges: { left: true, right: true, bottom: true, top: true },
+        listeners: { move: resizeMoveListener },
+        modifiers: [interact.modifiers.restrictSize({ min: { width: 50, height: 50 } })]
+    });
+    function dragMoveListener(event) {
+        var target = event.target, x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx, y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+        target.style.transform = 'translate(' + x + 'px, ' + y + 'px)'; target.setAttribute('data-x', x); target.setAttribute('data-y', y);
+    }
+    function resizeMoveListener(event) {
+        var target = event.target, x = (parseFloat(target.getAttribute('data-x')) || 0), y = (parseFloat(target.getAttribute('data-y')) || 0);
+        target.style.width = event.rect.width + 'px'; target.style.height = event.rect.height + 'px';
+        x += event.deltaRect.left; y += event.deltaRect.top;
+        target.style.transform = 'translate(' + x + 'px,' + y + 'px)'; target.setAttribute('data-x', x); target.setAttribute('data-y', y);
+    }
+
+    /* ÖZEL */
+    function setTheme(c1, c2) {
+        document.documentElement.style.setProperty('--grad-1', c1);
+        document.documentElement.style.setProperty('--grad-2', c2);
+    }
+    function addText() {
+        const div = document.createElement('div'); div.className = 'movable-box';
+        div.style.width = '300px'; div.style.height = '100px';
+        div.style.transform = 'translate(100px, 100px)'; div.setAttribute('data-x', 100); div.setAttribute('data-y', 100);
+        div.innerHTML = '<p class="subtitle editable" contenteditable="true">Yeni Metin</p>';
+        document.getElementById('canvas').appendChild(div);
+    }
+    function addImage() {
+        const div = document.createElement('div'); div.className = 'movable-box';
+        div.style.width = '300px'; div.style.height = '300px';
+        div.style.transform = 'translate(200px, 100px)'; div.setAttribute('data-x', 200); div.setAttribute('data-y', 100);
+        div.innerHTML = '<div class="image-placeholder">[ Yeni Görsel ]</div>';
+        document.getElementById('canvas').appendChild(div);
+    }
+</script>
+</body>
+</html>

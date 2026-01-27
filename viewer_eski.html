@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ data.presentation_title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Dancing+Script:wght@400;700&family=Inter:wght@400;600;800&family=Lato:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:wght@300;700&family=Montserrat:wght@400;600;800&family=Open+Sans:wght@400;600&family=Oswald:wght@400;600&family=Pacifico&family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Raleway:wght@400;600&family=Roboto:wght@400;500;700&family=Ubuntu:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0 10px;
+            border-right: 1px solid #444;
+        }
+        .toolbar-group:last-child { border-right: none; }
+
+        /* Gelişmiş Font Seçici */
+        .font-select {
+            background: #1e293b;
+            color: white;
+            border: 1px solid #444;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 180px;
+            cursor: pointer;
+        }
+        .font-select:focus { outline: 1px solid var(--accent); }
+
+        optgroup { color: #aaa; font-style: normal; font-weight: bold; }
+        option { color: white; padding: 5px; background: #1e293b; font-size: 16px; }
+
+        .tool-btn {
+            background: transparent; border: none; color: white; cursor: pointer;
+            font-size: 13px; padding: 6px; border-radius: 4px; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; min-width: 30px;
+        }
+        .tool-btn:hover { background: rgba(255,255,255,0.1); }
+        .tool-btn.active { background-color: var(--accent); color: #000; }
+
+        #fontSizeDisplay { color: #ccc; font-size: 13px; min-width: 25px; text-align: center; font-weight: bold; }
+
+        .color-palette { display: flex; gap: 4px; align-items: center; }
+        .color-swatch {
+            width: 20px; height: 20px; border-radius: 4px; cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.2); transition: transform 0.1s;
+        }
+        .color-swatch:hover { transform: scale(1.2); border-color: white; }
+        .color-picker-wrapper { position: relative; width: 20px; height: 20px; overflow: hidden; cursor: pointer; border-radius: 50%; border: 1px solid #666; }
+        .color-picker-wrapper input { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; cursor: pointer; }
+
+        .download-group {
+            margin-top: auto;
+            border-top: 1px solid #334155;
+            padding-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .download-btn {
+            background-color: #1e293b;
+            color: #fff;
+            border: 1px solid #334155;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+        .download-btn:hover { background-color: #334155; border-color: var(--accent); }
+
+        #exportOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 9999;
+            display: none; flex-direction: column;
+            align-items: center; justify-content: center; color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="exportOverlay">
+        <div style="font-size: 40px; margin-bottom: 20px;"><i class="fas fa-cog fa-spin"></i></div>
+        <h3>Sunum Hazırlanıyor...</h3>
+        <p id="exportStatus">Slaytlar işleniyor: 0 / 10</p>
+    </div>
+
+    <div id="layoutModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">Yeni Slayt Düzeni Seçin</div>
+            <div class="layout-grid">
+                <div class="layout-option" onclick="confirmAddSlide('standard')">
+                    <i class="fas fa-align-left fa-2x" style="color:#38bdf8"></i>
+                    <h4>Standart</h4>
+                    <span>Tek blok metin</span>
+                </div>
+                <div class="layout-option" onclick="confirmAddSlide('standard_split')">
+                    <i class="fas fa-columns fa-2x" style="color:#a855f7"></i>
+                    <h4>İki Sütun</h4>
+                    <span>Karşılaştırma için</span>
+                </div>
+                <div class="layout-option" onclick="confirmAddSlide('features')">
+                    <i class="fas fa-list fa-2x" style="color:#22c55e"></i>
+                    <h4>Özellikler</h4>
+                    <span>3 Maddeli yapı</span>
+                </div>
+                <div class="layout-option" onclick="confirmAddSlide('cards')">
+                    <i class="fas fa-th-large fa-2x" style="color:#f59e0b"></i>
+                    <h4>Kartlar</h4>
+                    <span>Grid düzeni</span>
+                </div>
+                <div class="layout-option" onclick="confirmAddSlide('timeline')">
+                    <i class="fas fa-stream fa-2x" style="color:#ef4444"></i>
+                    <h4>Zaman Tüneli</h4>
+                    <span>Süreç akışı</span>
+                </div>
+                <div class="layout-option" onclick="confirmAddSlide('numbered_list')">
+                    <i class="fas fa-list-ol fa-2x" style="color:#ec4899"></i>
+                    <h4>Numaralı Liste</h4>
+                    <span>Sıralı maddeler</span>
+                </div>
+            </div>
+            <button class="close-modal" onclick="closeAddSlideModal()">İptal</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="brand"><span>✨ AI Editör Pro</span></div>
+            <div class="theme-selector-box">
+                <div class="theme-btn active" onclick="setTheme('default', this)">Varsayılan</div>
+                <div class="theme-btn" onclick="setTheme('forest', this)">Orman</div>
+                <div class="theme-btn" onclick="setTheme('paper', this)">Kağıt</div>
+                <div class="theme-btn" onclick="setTheme('stripe', this)">Kurumsal</div>
+                <div class="theme-btn" onclick="setTheme('ice', this)">Buz Mavisi</div>
+                <div class="theme-btn" onclick="setTheme('airy', this)">Havadar</div>
+            </div>
+            <ul class="slide-list" id="slideList"></ul>
+            <button class="add-slide-btn" onclick="openAddSlideModal()">+ Yeni Slayt Ekle</button>
+
+            <div class="download-group">
+                <button class="download-btn" onclick="exportPresentation('pdf')">
+                    <i class="fas fa-file-pdf" style="color: #ef4444;"></i> PDF Olarak İndir
+                </button>
+                <button class="download-btn" onclick="exportPresentation('pptx')">
+                    <i class="fas fa-file-powerpoint" style="color: #f97316;"></i> PowerPoint İndir
+                </button>
+            </div>
+
+            <div style="margin-top: 20px; text-align:center;">
+                <a href="/" style="color: #666; text-decoration: none; font-size: 12px;">← Çıkış</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="canvas-toolbar">
+                <div class="toolbar-group">
+                    <button class="tool-btn" onclick="addFreeText()" title="Yazı Ekle"><i class="fas fa-font"></i></button>
+                    <button class="tool-btn" onclick="addFreeImage()" title="Görsel Ekle"><i class="fas fa-image"></i></button>
+                </div>
+
+                <div class="toolbar-group">
+                    <select id="fontFamilySelect" class="font-select" onchange="changeFontFamily(this.value)">
+                        <option value="">Font Seç...</option>
+
+                        <optgroup label="Modern & Sans-Serif">
+                            <option value="'Inter', sans-serif" style="font-family: 'Inter', sans-serif;">Inter (Varsayılan)</option>
+                            <option value="'Roboto', sans-serif" style="font-family: 'Roboto', sans-serif;">Roboto</option>
+                            <option value="'Open Sans', sans-serif" style="font-family: 'Open Sans', sans-serif;">Open Sans</option>
+                            <option value="'Montserrat', sans-serif" style="font-family: 'Montserrat', sans-serif;">Montserrat</option>
+                            <option value="'Poppins', sans-serif" style="font-family: 'Poppins', sans-serif;">Poppins</option>
+                            <option value="'Lato', sans-serif" style="font-family: 'Lato', sans-serif;">Lato</option>
+                            <option value="'Ubuntu', sans-serif" style="font-family: 'Ubuntu', sans-serif;">Ubuntu</option>
+                        </optgroup>
+
+                        <optgroup label="Klasik & Tırnaklı (Serif)">
+                            <option value="'Merriweather', serif" style="font-family: 'Merriweather', serif;">Merriweather</option>
+                            <option value="'Playfair Display', serif" style="font-family: 'Playfair Display', serif;">Playfair Display</option>
+                            <option value="'Lora', serif" style="font-family: 'Lora', serif;">Lora</option>
+                            <option value="'PT Serif', serif" style="font-family: 'PT Serif', serif;">PT Serif</option>
+                        </optgroup>
+
+                        <optgroup label="Başlık & Stil">
+                            <option value="'Oswald', sans-serif" style="font-family: 'Oswald', sans-serif; text-transform:uppercase;">OSWALD (POSTER)</option>
+                            <option value="'Bebas Neue', cursive" style="font-family: 'Bebas Neue', cursive; font-size: 18px;">BEBAS NEUE</option>
+                            <option value="'Raleway', sans-serif" style="font-family: 'Raleway', sans-serif; font-weight:300;">Raleway (İnce)</option>
+                        </optgroup>
+
+                        <optgroup label="El Yazısı & Kreatif">
+                            <option value="'Dancing Script', cursive" style="font-family: 'Dancing Script', cursive;">Dancing Script</option>
+                            <option value="'Pacifico', cursive" style="font-family: 'Pacifico', cursive;">Pacifico</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="toolbar-group">
+                    <button class="tool-btn" id="btnBold" onclick="toggleBold()" title="Kalın"><i class="fas fa-bold"></i></button>
+                    <button class="tool-btn" id="btnItalic" onclick="toggleItalic()" title="İtalik"><i class="fas fa-italic"></i></button>
+                    <div style="width:1px; height:20px; background:#444; margin:0 5px;"></div>
+                    <button class="tool-btn" onclick="changeFontSize(2)" title="Büyüt"><i class="fas fa-plus"></i></button>
+                    <span id="fontSizeDisplay">--</span>
+                    <button class="tool-btn" onclick="changeFontSize(-2)" title="Küçült"><i class="fas fa-minus"></i></button>
+                </div>
+
+                <div class="toolbar-group">
+                    <button class="tool-btn" onclick="setTextAlign('left')"><i class="fas fa-align-left"></i></button>
+                    <button class="tool-btn" onclick="setTextAlign('center')"><i class="fas fa-align-center"></i></button>
+                    <button class="tool-btn" onclick="setTextAlign('right')"><i class="fas fa-align-right"></i></button>
+                </div>
+
+                <div class="toolbar-group" style="border:none;">
+                    <div class="color-palette">
+                        <div class="color-swatch" style="background:#ffffff;" onclick="changeTextColor('#ffffff')" title="Beyaz"></div>
+                        <div class="color-swatch" style="background:#0f172a;" onclick="changeTextColor('#0f172a')" title="Koyu Lacivert"></div>
+                        <div class="color-swatch" style="background:#38bdf8;" onclick="changeTextColor('#38bdf8')" title="Mavi"></div>
+                        <div class="color-swatch" style="background:#ef4444;" onclick="changeTextColor('#ef4444')" title="Kırmızı"></div>
+                        <div class="color-swatch" style="background:#fbbf24;" onclick="changeTextColor('#fbbf24')" title="Sarı"></div>
+                        <div class="color-picker-wrapper" title="Özel Renk Seç">
+                            <img src="https://www.svgrepo.com/show/532993/color-wheel.svg" style="width:100%; height:100%;">
+                            <input type="color" onchange="changeTextColor(this.value)">
+                        </div>
+                    </div>
+
+                    <button class="tool-btn" onclick="changeLayer(1)" title="Öne Getir" style="margin-left:10px;"><i class="fas fa-arrow-up"></i></button>
+                    <button class="tool-btn" onclick="changeLayer(-1)" title="Arkaya Gönder"><i class="fas fa-arrow-down"></i></button>
+                </div>
+
+                <button class="tool-btn" onclick="deleteSelected()" style="margin-left:auto; color:#ff6b6b;" title="Sil"><i class="fas fa-trash"></i></button>
+            </div>
+
+            <div class="slide-canvas" id="slideCanvas" tabindex="0"></div>
+            <input type="file" id="imageUploadInput" style="display: none;" accept="image/*">
+        </main>
+    </div>
+
+    <script>
+        let slides = {{ data.slides | tojson }};
+        let currentTheme = "{{ data.theme if data.theme else 'default' }}";
+        let currentSlideIndex = 0;
+        let selectedElement = null;
+        let draggedItemIndex = null; // Sürükle bırak için index
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setInitialTheme(currentTheme);
+            renderSidebar();
+            if (slides.length > 0) renderSlide(0);
+            initInteract();
+
+            document.addEventListener('click', (e) => {
+                if(!e.target.closest('.movable-element') && !e.target.closest('.canvas-toolbar') && !e.target.closest('.slide-controls')) {
+                    deselectAll();
+                }
+            });
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Delete') {
+                    if (document.activeElement.isContentEditable) return;
+                    deleteSelected();
+                }
+            });
+        });
+
+        // --- GÜÇLENDİRİLMİŞ FONT FONKSİYONU ---
+        function changeFontFamily(font) {
+            if (!selectedElement) return;
+            selectedElement.style.fontFamily = font;
+            const allElements = selectedElement.querySelectorAll('*');
+            allElements.forEach(el => {
+                el.style.fontFamily = font;
+            });
+        }
+
+        function toggleBold() {
+            if (!selectedElement) return;
+            const currentWeight = window.getComputedStyle(selectedElement).fontWeight;
+            const isBold = currentWeight === '700' || currentWeight === 'bold' || parseInt(currentWeight) > 500;
+            const newValue = isBold ? 'normal' : 'bold';
+
+            selectedElement.style.fontWeight = newValue;
+            selectedElement.querySelectorAll('*').forEach(el => el.style.fontWeight = newValue);
+            updateToolbarState();
+        }
+
+        function toggleItalic() {
+            if (!selectedElement) return;
+            const currentStyle = window.getComputedStyle(selectedElement).fontStyle;
+            const isItalic = currentStyle === 'italic';
+            const newValue = isItalic ? 'normal' : 'italic';
+
+            selectedElement.style.fontStyle = newValue;
+            selectedElement.querySelectorAll('*').forEach(el => el.style.fontStyle = newValue);
+            updateToolbarState();
+        }
+
+        function setTextAlign(align) {
+            if (!selectedElement) return;
+            selectedElement.style.textAlign = align;
+            selectedElement.querySelectorAll('*').forEach(el => el.style.textAlign = align);
+        }
+
+        function changeFontSize(delta) {
+            if (!selectedElement) return;
+
+            selectedElement.setAttribute('data-manual-size', 'true');
+
+            let targets = selectedElement.querySelectorAll('.content-text, .f-desc, .block-desc, p, h1, h2, h3, li, span');
+            if (targets.length === 0) targets = [selectedElement];
+
+            targets.forEach(target => {
+                let currentSize = parseInt(window.getComputedStyle(target).fontSize);
+                let newSize = currentSize + delta;
+                if (newSize < 8) newSize = 8;
+
+                target.style.fontSize = newSize + "px";
+                target.style.lineHeight = "1.4";
+            });
+
+            updateToolbarState();
+        }
+
+        function changeTextColor(color) {
+            if (selectedElement) {
+                selectedElement.style.color = color;
+                selectedElement.querySelectorAll('*').forEach(c => c.style.color = color);
+            }
+        }
+
+        function changeLayer(delta) {
+            if (!selectedElement) return;
+            let currentZ = parseInt(window.getComputedStyle(selectedElement).zIndex);
+            if (isNaN(currentZ)) currentZ = 1;
+            selectedElement.style.zIndex = currentZ + delta;
+        }
+
+        function deleteSelected() {
+            if (selectedElement) {
+                selectedElement.remove();
+                selectedElement = null;
+                updateToolbarState();
+            }
+        }
+
+        function updateToolbarState() {
+            const btnBold = document.getElementById('btnBold');
+            const btnItalic = document.getElementById('btnItalic');
+            const fontSelect = document.getElementById('fontFamilySelect');
+            const sizeDisplay = document.getElementById('fontSizeDisplay');
+
+            if (!selectedElement) {
+                btnBold.classList.remove('active');
+                btnItalic.classList.remove('active');
+                fontSelect.value = "";
+                sizeDisplay.innerText = "--";
+                return;
+            }
+
+            const style = window.getComputedStyle(selectedElement);
+
+            if (style.fontWeight === '700' || style.fontWeight === 'bold' || parseInt(style.fontWeight) > 500) btnBold.classList.add('active');
+            else btnBold.classList.remove('active');
+
+            if (style.fontStyle === 'italic') btnItalic.classList.add('active');
+            else btnItalic.classList.remove('active');
+
+            let currentFont = style.fontFamily.replace(/"/g, "'").split(',')[0].trim();
+            let options = fontSelect.options;
+            let found = false;
+            for(let i=0; i<options.length; i++) {
+                if(options[i].value.includes(currentFont)) {
+                    fontSelect.selectedIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+            if(!found) fontSelect.value = "";
+
+            let target = selectedElement.querySelector('.content-text, p, h1, h3') || selectedElement;
+            sizeDisplay.innerText = parseInt(window.getComputedStyle(target).fontSize);
+        }
+
+        // --- ORTAK FONKSİYONLAR ---
+        function autoFitText() {
+            const textContainers = document.querySelectorAll('.scrollable-content, .f-desc, .block-desc, .split-col-content');
+            textContainers.forEach(el => {
+                if (el.closest('.movable-element').getAttribute('data-manual-size') === 'true') return;
+                let fontSize = parseInt(window.getComputedStyle(el).fontSize);
+                const minFontSize = 11;
+                while (el.scrollHeight > el.clientHeight && fontSize > minFontSize) {
+                    fontSize--;
+                    el.style.fontSize = fontSize + 'px';
+                }
+            });
+        }
+
+        function resizeBoxToImage(img) {
+            if (!img.complete || !img.naturalWidth) {
+                img.onload = () => resizeBoxToImage(img);
+                return;
+            }
+            const box = img.closest('.movable-element');
+            if (box) {
+                const ratio = img.naturalHeight / img.naturalWidth;
+                const currentWidth = parseFloat(box.style.width) || box.offsetWidth;
+                const newHeight = currentWidth * ratio;
+                box.style.height = newHeight + 'px';
+                img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover'; img.style.borderRadius = '8px';
+            }
+        }
+
+        function triggerImageUpload(imgElement) {
+            const input = document.getElementById('imageUploadInput');
+            input.click();
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(re) {
+                        imgElement.src = re.target.result;
+                        imgElement.onload = () => resizeBoxToImage(imgElement);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            };
+        }
+
+        function renderSlide(index) {
+            const slide = slides[index];
+            const canvas = document.getElementById('slideCanvas');
+            canvas.innerHTML = '';
+            let contentArray = Array.isArray(slide.content) ? slide.content : [slide.content];
+
+            if (slide.layout !== 'title_slide') {
+                createMovableElement(canvas, 50, 40, 1000, 70, `<div class="slide-heading" contenteditable="true" onblur="updateTitle(this)">${slide.title}</div>`);
+            }
+            if (slide.layout === 'standard_split') {
+                createMovableElement(canvas, 50, 150, 480, 400, `<div class="split-col-content scrollable-content" contenteditable="true">${contentArray[0] || 'Sol taraf...'}</div>`);
+                createMovableElement(canvas, 550, 150, 2, 400, `<div style="width:100%; height:100%; background:var(--accent); opacity:0.5;"></div>`);
+                let rightText = contentArray[1] || (contentArray.length > 1 ? contentArray.slice(1).join('<br><br>') : 'Sağ taraf...');
+                createMovableElement(canvas, 570, 150, 480, 400, `<div class="split-col-content scrollable-content" contenteditable="true">${rightText}</div>`);
+            }
+            else if (slide.layout === 'title_slide') {
+                canvas.innerHTML += `<div class="hero-graphic"></div>`;
+                createMovableElement(canvas, 80, 180, 940, 200, `<div class="layout-title"><h1 contenteditable="true">${slide.title}</h1></div>`);
+                createMovableElement(canvas, 150, 380, 800, 100, `<div class="layout-title"><p contenteditable="true" style="opacity:0.8; font-size:24px;">${contentArray[0]||''}</p></div>`);
+                if (slide.image && slide.image.trim() !== "" && slide.image !== "null") {
+                    let imgPath = `/static/uploads/${slide.image}`;
+                    createMovableElement(canvas, 350, 480, 400, 250, `<img src="${imgPath}" onload="resizeBoxToImage(this)" onerror="this.parentElement.remove()" ondblclick="triggerImageUpload(this)">`);
+                }
+            }
+            else if (slide.layout === 'standard') {
+                let hasImage = (slide.image && slide.image.trim() !== "" && slide.image !== "null");
+                if (hasImage) {
+                    let imgPath = `/static/uploads/${slide.image}`;
+                    createMovableElement(canvas, 650, 150, 400, 300, `<img src="${imgPath}" onload="resizeBoxToImage(this)" onerror="this.parentElement.remove()" ondblclick="triggerImageUpload(this)">`);
+                }
+                let startY = 150; let width = hasImage ? 550 : 1000;
+                if (contentArray.length === 1 && contentArray[0].length > 200) {
+                     let html = `<div class="modern-content-block" style="height:100%;"><div class="accent-bar"></div><div class="content-text scrollable-content" contenteditable="true">${contentArray[0]}</div></div>`;
+                     createMovableElement(canvas, 50, startY, width, 400, html);
+                } else {
+                    contentArray.forEach((item, i) => {
+                        let topPos = startY + (i * 120); if(topPos > 580) return;
+                        let html = `<div class="modern-content-block"><div class="accent-bar"></div><div class="content-text scrollable-content" contenteditable="true">${item}</div></div>`;
+                        createMovableElement(canvas, 50, topPos, width, 100, html);
+                    });
+                }
+            }
+            else if (slide.layout === 'features') {
+                let cardWidth = 300; let gap = 40; let startX = 50;
+                contentArray.forEach((item, i) => {
+                    if (i > 2) return;
+                    let parts = item.split(':');
+                    let hasSplit = parts.length > 1; let titleVal = hasSplit ? parts[0] : ''; let descVal = hasSplit ? parts[1] : parts[0];
+                    let posX = startX + (i * (cardWidth + gap));
+                    let titleHtml = titleVal ? `<h3 class="f-title" contenteditable="true">${titleVal}</h3>` : '';
+                    let html = `<div class="feature-card"><div class="icon-box">★</div>${titleHtml}<p class="f-desc scrollable-content" contenteditable="true">${descVal}</p></div>`;
+                    createMovableElement(canvas, posX, 180, cardWidth, 350, html);
+                });
+            }
+            else if (slide.layout === 'cards') {
+                let cardWidth = 320; let gap = 30;
+                contentArray.forEach((item, i) => {
+                    if(i > 5) return;
+                    let parts = item.split(':');
+                    let hasSplit = parts.length > 1; let titleVal = hasSplit ? parts[0] : 'Madde ' + (i+1); let descVal = hasSplit ? parts[1] : parts[0];
+                    let col = i % 3; let row = Math.floor(i / 3); let posX = 50 + (col * (cardWidth + gap)); let posY = 150 + (row * 220);
+                    let html = `<div class="info-card"><div class="card-number">${i+1}</div><h3 contenteditable="true">${titleVal}</h3><p class="scrollable-content" contenteditable="true">${descVal}</p></div>`;
+                    createMovableElement(canvas, posX, posY, cardWidth, 200, html);
+                });
+            }
+            else if (slide.layout === 'numbered_list') {
+                let startY = 150;
+                contentArray.forEach((item, i) => {
+                    let topPos = startY + (i * 120); if (topPos > 550) return;
+                    let parts = item.split(':');
+                    let hasSplit = parts.length > 1; let titleVal = hasSplit ? parts[0] : ''; let descVal = hasSplit ? parts[1] : parts[0];
+                    let html = `<div class="num-block"><div class="big-num">${i+1}</div><div class="block-content">${titleVal ? `<h3 class="block-title" contenteditable="true">${titleVal}</h3>` : ''}<p class="block-desc scrollable-content" contenteditable="true">${descVal}</p></div></div>`;
+                    createMovableElement(canvas, 50, topPos, 900, 100, html);
+                });
+            }
+            else if (slide.layout === 'section') {
+                createMovableElement(canvas, 100, 200, 900, 300, `<div class="layout-section"><div class="section-tag">BÖLÜM</div><div class="section-title" contenteditable="true">${slide.title}</div><div class="section-desc scrollable-content" contenteditable="true">${contentArray[0]||''}</div></div>`);
+            } else if (slide.layout === 'timeline') {
+                let stepsHTML = ''; contentArray.forEach(item => { let p=item.split(':'); stepsHTML+=`<div class="step-item"><div class="step-card"><h3 class="step-title" contenteditable="true">${p[0]||'Adım'}</h3><p class="step-desc scrollable-content" contenteditable="true">${p[1]||item}</p></div><div class="step-dot"></div></div>`; });
+                let timelineHTML = `<div class="timeline-wrapper"><div class="timeline-line"></div><div class="steps-container">${stepsHTML}</div></div>`;
+                createMovableElement(canvas, 50, 150, 1000, 400, timelineHTML);
+            }
+
+            setTimeout(autoFitText, 100);
+            deselectAll();
+        }
+
+        function createMovableElement(canvas, x, y, w, h, innerHTML) {
+            const div = document.createElement('div');
+            div.className = 'movable-element';
+            div.style.transform = `translate(${x}px, ${y}px)`;
+            div.style.width = `${w}px`;
+            div.style.height = `${h}px`;
+            div.setAttribute('data-x', x);
+            div.setAttribute('data-y', y);
+            div.innerHTML = innerHTML;
+            div.addEventListener('mousedown', (e) => { e.stopPropagation(); selectBox(div); });
+            canvas.appendChild(div);
+        }
+
+        function selectBox(el) { deselectAll(); el.classList.add('selected'); selectedElement = el; updateToolbarState(); }
+        function deselectAll() { document.querySelectorAll('.movable-element').forEach(el => el.classList.remove('selected')); selectedElement = null; updateToolbarState(); }
+        function updateTitle(el) { slides[currentSlideIndex].title = el.innerText; renderSidebar(); }
+        function addFreeText() { const canvas = document.getElementById('slideCanvas'); createMovableElement(canvas, 100, 100, 300, 80, `<div style="width:100%; height:100%; font-size:24px; padding:10px;" contenteditable="true">Yeni Metin</div>`); }
+        function addFreeImage() { const canvas = document.getElementById('slideCanvas'); createMovableElement(canvas, 200, 100, 300, 300, `<img src="https://via.placeholder.com/300x300.png?text=Gorsel+Sec" style="width:100%; height:100%; object-fit:contain;" onload="resizeBoxToImage(this)" ondblclick="triggerImageUpload(this)">`); }
+        function setInitialTheme(themeName) { document.body.setAttribute('data-theme', themeName); document.querySelectorAll('.theme-btn').forEach(btn => { if (btn.innerText.toLowerCase().includes(themeName) || (themeName==='default' && btn.innerText==='Varsayılan')) btn.classList.add('active'); else btn.classList.remove('active'); }); }
+        function setTheme(themeName, el) { document.body.setAttribute('data-theme', themeName); document.querySelectorAll('.theme-btn').forEach(d => d.classList.remove('active')); el.classList.add('active'); }
+
+        // --- SÜRÜKLE BIRAK İÇİN RENDER SIDEBAR GÜNCELLEMESİ ---
+        function renderSidebar() {
+            const list = document.getElementById('slideList');
+            list.innerHTML = '';
+            slides.forEach((slide, index) => {
+                const li = document.createElement('li');
+                li.className = `slide-item ${index === currentSlideIndex ? 'active' : ''}`;
+                li.onclick = () => changeSlide(index);
+
+                // Drag Events
+                li.draggable = true;
+                li.ondragstart = (e) => handleDragStart(e, index);
+                li.ondragover = (e) => handleDragOver(e);
+                li.ondrop = (e) => handleDrop(e, index);
+                li.ondragenter = (e) => li.classList.add('drag-over');
+                li.ondragleave = (e) => li.classList.remove('drag-over');
+
+                li.innerHTML = `
+                    <div class="slide-info">
+                        <h4>${index + 1}. ${slide.title}</h4>
+                        <p>${slide.layout}</p>
+                    </div>
+                    <div class="slide-controls" onclick="event.stopPropagation()">
+                        <button class="icon-btn delete" onclick="deleteSlide(${index})">✕</button>
+                    </div>`;
+                list.appendChild(li);
+            });
+        }
+
+        function handleDragStart(e, index) {
+            draggedItemIndex = index;
+            e.dataTransfer.effectAllowed = 'move';
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault(); // Drop'a izin ver
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDrop(e, targetIndex) {
+            e.preventDefault();
+            e.target.closest('li').classList.remove('drag-over');
+
+            if (draggedItemIndex !== null && draggedItemIndex !== targetIndex) {
+                // Diziyi güncelle
+                const itemToMove = slides[draggedItemIndex];
+                slides.splice(draggedItemIndex, 1); // Eskiyi sil
+                slides.splice(targetIndex, 0, itemToMove); // Yeni yere ekle
+
+                // Eğer taşınan slayt aktifse index'i güncelle
+                if (currentSlideIndex === draggedItemIndex) {
+                    currentSlideIndex = targetIndex;
+                } else if (currentSlideIndex === targetIndex && draggedItemIndex < targetIndex) {
+                   // Kaydırma sonrası düzeltme gerekebilir, en temiz yol:
+                   // Aktif slaytın başlığını/idsini takip etmek daha doğru ama burada basitçe yeniden render yeterli.
+                }
+
+                renderSidebar();
+                renderSlide(currentSlideIndex); // Görüntüyü tazele
+            }
+            draggedItemIndex = null;
+        }
+
+        function changeSlide(index) { currentSlideIndex = index; renderSidebar(); renderSlide(index); }
+        function deleteSlide(index) { if (confirm('Sil?')) { slides.splice(index, 1); if (slides.length === 0) addNewSlide(); else { if (currentSlideIndex >= slides.length) currentSlideIndex = slides.length - 1; changeSlide(currentSlideIndex); } } }
+
+        // --- YENİ SLAYT LAYOUT SEÇİMİ ---
+        function openAddSlideModal() {
+            document.getElementById('layoutModal').style.display = 'flex';
+        }
+        function closeAddSlideModal() {
+            document.getElementById('layoutModal').style.display = 'none';
+        }
+        function confirmAddSlide(layoutType) {
+            let content = ["Yeni İçerik"];
+            if (layoutType === 'features' || layoutType === 'cards') {
+                content = ["Özellik 1: Açıklama", "Özellik 2: Açıklama", "Özellik 3: Açıklama"];
+            } else if (layoutType === 'standard_split') {
+                content = ["Sol taraf içeriği", "Sağ taraf içeriği"];
+            }
+
+            slides.push({ title: "Yeni Slayt", layout: layoutType, content: content, image: "" });
+            changeSlide(slides.length - 1);
+            closeAddSlideModal();
+        }
+
+        function initInteract() { interact('.movable-element').draggable({ inertia: true, ignoreFrom: '[contenteditable="true"]:focus', modifiers: [ interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true }) ], autoScroll: true, listeners: { move: dragMoveListener } }).resizable({ edges: { left: true, right: true, bottom: true, top: true }, listeners: { move: function (event) { var target = event.target; var x = (parseFloat(target.getAttribute('data-x')) || 0), y = (parseFloat(target.getAttribute('data-y')) || 0); target.style.width = event.rect.width + 'px'; target.style.height = event.rect.height + 'px'; x += event.deltaRect.left; y += event.deltaRect.top; target.style.transform = 'translate(' + x + 'px,' + y + 'px)'; target.setAttribute('data-x', x); target.setAttribute('data-y', y); } } }); }
+        function dragMoveListener (event) { var target = event.target; var x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx, y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy; target.style.transform = 'translate(' + x + 'px, ' + y + 'px)'; target.setAttribute('data-x', x); target.setAttribute('data-y', y); }
+
+        // --- İNDİRME FONKSİYONLARI (PDF & PPTX) ---
+        async function exportPresentation(type) {
+            const overlay = document.getElementById('exportOverlay');
+            const status = document.getElementById('exportStatus');
+            overlay.style.display = 'flex';
+
+            deselectAll();
+            const originalIndex = currentSlideIndex;
+
+            // Canvas Elementini Al
+            const canvasElement = document.getElementById('slideCanvas');
+
+            // --- BEYAZ KENARLIK HACK ---
+            const originalBorder = canvasElement.style.border;
+            const originalShadow = canvasElement.style.boxShadow;
+            canvasElement.style.border = 'none';
+            canvasElement.style.boxShadow = 'none';
+            // ---------------------------
+
+            let pptx;
+            let doc;
+
+            if (type === 'pptx') {
+                pptx = new PptxGenJS();
+                pptx.layout = 'LAYOUT_16x9';
+                pptx.title = document.title;
+            } else {
+                window.jsPDF = window.jspdf.jsPDF;
+                doc = new window.jsPDF({
+                    orientation: 'landscape',
+                    unit: 'px',
+                    format: [1100, 618]
+                });
+            }
+
+            try {
+                for (let i = 0; i < slides.length; i++) {
+                    status.innerText = `Slaytlar işleniyor: ${i + 1} / ${slides.length}`;
+
+                    changeSlide(i);
+                    await new Promise(r => setTimeout(r, 600));
+
+                    // Force scroll to top left
+                    window.scrollTo(0,0);
+
+                    const canvas = await html2canvas(canvasElement, {
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: null,
+                        scrollX: 0,
+                        scrollY: 0,
+                        x: 0,
+                        y: 0,
+                        width: 1100,
+                        height: 618
+                    });
+
+                    const imgData = canvas.toDataURL('image/png');
+
+                    if (type === 'pptx') {
+                        let slide = pptx.addSlide();
+                        slide.addImage({
+                            data: imgData,
+                            x: '-0.5%', y: '-0.5%', w: '101%', h: '101%'
+                        });
+                    } else {
+                        if (i > 0) doc.addPage([1100, 618], 'landscape');
+                        doc.addImage(imgData, 'PNG', 0, 0, 1100, 618);
+                    }
+                }
+
+                status.innerText = "Dosya oluşturuluyor...";
+
+                if (type === 'pptx') {
+                    await pptx.writeFile({ fileName: `Sunum-${Date.now()}.pptx` });
+                } else {
+                    doc.save(`Sunum-${Date.now()}.pdf`);
+                }
+
+            } catch (error) {
+                alert("İndirme sırasında bir hata oluştu: " + error);
+                console.error(error);
+            } finally {
+                // Stilleri Geri Yükle
+                canvasElement.style.border = originalBorder;
+                canvasElement.style.boxShadow = originalShadow;
+
+                changeSlide(originalIndex);
+                overlay.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

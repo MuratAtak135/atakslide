@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Temiz & Düz Layout Testi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --line-color: #334155;
+        }
+
+        body {
+            background-color: #000;
+            font-family: 'Inter', sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 40px; padding: 40px; color: var(--text-main);
+        }
+
+        .slide-frame {
+            width: 1100px; height: 600px;
+            border: 1px dashed #444; position: relative;
+            background: var(--bg-dark); overflow: hidden;
+            padding: 40px; box-sizing: border-box;
+            display: flex; flex-direction: column;
+        }
+
+        .label {
+            position: absolute; top: 0; left: 0;
+            background: #222; padding: 5px 15px;
+            color: #aaa; font-size: 12px; font-weight: bold;
+        }
+
+        h2 { margin-top: 0; font-weight: 800; letter-spacing: -0.5px; }
+
+        /* ============================================================
+           1. QUADRANT (DÖRTLÜ MATRİS)
+           Kullanım: SWOT, Karşılaştırma, 4 Ana Ayak
+           Yapı: 2x2 Grid. Çok temiz, kenarlıklı.
+           ============================================================ */
+        .quadrant-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .q-box {
+            background: var(--bg-card);
+            border: 1px solid var(--line-color);
+            border-radius: 12px;
+            padding: 25px;
+            display: flex; flex-direction: column;
+            transition: 0.2s;
+        }
+
+        /* Her kutuya hafif bir renk vurgusu (Opsiyonel) */
+        .q-1 { border-top: 4px solid var(--accent); }
+        .q-2 { border-top: 4px solid var(--accent-green); }
+        .q-3 { border-top: 4px solid var(--accent-orange); }
+        .q-4 { border-top: 4px solid var(--accent-purple); }
+
+        .q-title {
+            font-size: 18px; font-weight: 700; color: #fff;
+            margin-bottom: 10px; display: flex; align-items: center; gap: 10px;
+        }
+        .q-content {
+            font-size: 14px; color: var(--text-muted); line-height: 1.6;
+            flex: 1; overflow-y: auto;
+        }
+        .q-content ul { padding-left: 20px; margin: 0; }
+        .q-content li { margin-bottom: 5px; }
+
+
+        /* ============================================================
+           2. DATA BARS (VERİ ÇUBUKLARI)
+           Kullanım: Anket sonuçları, Performans, Yüzdeler
+           Yapı: Metin solda, Çubuk ortada, Yüzde sağda.
+           ============================================================ */
+        .charts-wrapper {
+            display: flex; flex-direction: column;
+            justify-content: center; height: 100%; gap: 25px;
+        }
+
+        .chart-row {
+            display: flex; align-items: center; width: 100%;
+        }
+
+        .chart-label {
+            width: 200px; font-weight: 600; font-size: 16px;
+            color: var(--text-main); flex-shrink: 0;
+        }
+
+        .chart-track {
+            flex: 1; height: 12px; background: #334155;
+            border-radius: 6px; margin: 0 20px;
+            overflow: hidden; position: relative;
+        }
+
+        .chart-fill {
+            height: 100%; background: var(--accent);
+            border-radius: 6px; display: block;
+        }
+
+        .chart-value {
+            width: 60px; font-family: 'Roboto Mono', monospace;
+            font-weight: 700; color: var(--accent); text-align: right;
+        }
+
+        /* Renk varyasyonları */
+        .c-blue { background: var(--accent); }
+        .c-green { background: var(--accent-green); }
+        .c-purple { background: var(--accent-purple); }
+
+
+        /* ============================================================
+           3. MOSAIC GRID (MOZAİK IZGARA)
+           Kullanım: Teknolojiler, Modüller, Anahtar Kelimeler
+           Yapı: 3x2 Kartlar. Kısa ve ikonlu.
+           ============================================================ */
+        .mosaic-wrapper {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr); /* 2 satır, 3 sütun */
+            gap: 20px; height: 100%;
+        }
+
+        .m-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--line-color);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+        }
+
+        .m-icon {
+            font-size: 24px; color: var(--accent); margin-bottom: 15px;
+            background: rgba(56, 189, 248, 0.1); width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center; border-radius: 8px;
+        }
+
+        .m-title { font-weight: 700; font-size: 16px; margin-bottom: 5px; color: #fff; }
+        .m-desc { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+
+    </style>
+</head>
+<body>
+
+    <div class="slide-frame">
+        <div class="label">1. Quadrant (Matris)</div>
+        <h2 contenteditable="true">Durum Analizi (SWOT)</h2>
+
+        <div class="quadrant-wrapper">
+            <div class="q-box q-1">
+                <div class="q-title" contenteditable="true"><i class="fas fa-rocket"></i> Güçlü Yönler</div>
+                <div class="q-content" contenteditable="true">
+                    <ul>
+                        <li>Yüksek doğruluk oranı (%99)</li>
+                        <li>Kullanıcı dostu arayüz</li>
+                        <li>Hızlı entegrasyon</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="q-box q-2">
+                <div class="q-title" contenteditable="true"><i class="fas fa-leaf"></i> Fırsatlar</div>
+                <div class="q-content" contenteditable="true">
+                    <ul>
+                        <li>Pazar payını artırma</li>
+                        <li>Mobil uygulama desteği</li>
+                        <li>Global pazara açılma</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="q-box q-3">
+                <div class="q-title" contenteditable="true"><i class="fas fa-exclamation-triangle"></i> Zayıf Yönler</div>
+                <div class="q-content" contenteditable="true">
+                    <ul>
+                        <li>Yüksek sunucu maliyeti</li>
+                        <li>Sınırlı dil desteği</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="q-box q-4">
+                <div class="q-title" contenteditable="true"><i class="fas fa-shield-alt"></i> Tehditler</div>
+                <div class="q-content" contenteditable="true">
+                    <ul>
+                        <li>Yeni rakiplerin girişi</li>
+                        <li>Yasal düzenlemeler</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide-frame">
+        <div class="label">2. Data Bars (Sonuçlar)</div>
+        <h2 contenteditable="true">Anket Sonuçları ve Performans</h2>
+
+        <div class="charts-wrapper">
+            <div class="chart-row">
+                <div class="chart-label" contenteditable="true">Memnuniyet</div>
+                <div class="chart-track"><span class="chart-fill c-blue" style="width: 85%;"></span></div>
+                <div class="chart-value" contenteditable="true">85%</div>
+            </div>
+
+            <div class="chart-row">
+                <div class="chart-label" contenteditable="true">Hız Artışı</div>
+                <div class="chart-track"><span class="chart-fill c-green" style="width: 60%;"></span></div>
+                <div class="chart-value" contenteditable="true">60%</div>
+            </div>
+
+            <div class="chart-row">
+                <div class="chart-label" contenteditable="true">Hata Azalması</div>
+                <div class="chart-track"><span class="chart-fill c-purple" style="width: 92%;"></span></div>
+                <div class="chart-value" contenteditable="true">92%</div>
+            </div>
+
+            <div class="chart-row">
+                <div class="chart-label" contenteditable="true">Maliyet Tasarrufu</div>
+                <div class="chart-track"><span class="chart-fill c-blue" style="width: 45%;"></span></div>
+                <div class="chart-value" contenteditable="true">45%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide-frame">
+        <div class="label">3. Mosaic Grid (Teknolojiler/Modüller)</div>
+        <h2 contenteditable="true">Sistem Bileşenleri</h2>
+
+        <div class="mosaic-wrapper">
+            <div class="m-card">
+                <div class="m-icon"><i class="fab fa-python"></i></div>
+                <div class="m-title" contenteditable="true">Python Backend</div>
+                <div class="m-desc" contenteditable="true">Flask altyapısı ile güçlü veri işleme.</div>
+            </div>
+            <div class="m-card">
+                <div class="m-icon"><i class="fas fa-brain"></i></div>
+                <div class="m-title" contenteditable="true">OpenAI API</div>
+                <div class="m-desc" contenteditable="true">GPT-4 ile doğal dil işleme yeteneği.</div>
+            </div>
+            <div class="m-card">
+                <div class="m-icon"><i class="fas fa-database"></i></div>
+                <div class="m-title" contenteditable="true">Veri Tabanı</div>
+                <div class="m-desc" contenteditable="true">JSON tabanlı esnek veri saklama.</div>
+            </div>
+            <div class="m-card">
+                <div class="m-icon"><i class="fas fa-paint-brush"></i></div>
+                <div class="m-title" contenteditable="true">Frontend</div>
+                <div class="m-desc" contenteditable="true">Dinamik ve etkileşimli HTML/JS arayüz.</div>
+            </div>
+            <div class="m-card">
+                <div class="m-icon"><i class="fas fa-file-pdf"></i></div>
+                <div class="m-title" contenteditable="true">PDF İşleme</div>
+                <div class="m-desc" contenteditable="true">PyMuPDF ile döküman analizi.</div>
+            </div>
+            <div class="m-card">
+                <div class="m-icon"><i class="fas fa-lock"></i></div>
+                <div class="m-title" contenteditable="true">Güvenlik</div>
+                <div class="m-desc" contenteditable="true">Veri şifreleme ve güvenli oturum.</div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

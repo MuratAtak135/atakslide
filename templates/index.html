@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>AtakSlide</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body.landing-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1e1e1e;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .input-card {
+            background-color: #252526;
+            padding: 40px;
+            border-radius: 10px;
+            width: 500px;
+            text-align: center;
+            border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        h1 { margin-bottom: 20px; color: #007bff; }
+
+        textarea {
+            width: 100%;
+            height: 80px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #1e1e1e;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 5px;
+            box-sizing: border-box;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            color: #aaa;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .file-upload-wrapper {
+            border: 1px dashed #555;
+            padding: 15px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Yeni Özel Dosya Yükleme Butonu Stilleri */
+        .custom-file-btn {
+            background-color: #e2e6ea;
+            color: #212529;
+            border: 1px solid #ccc;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-block;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .custom-file-btn:hover { background-color: #dbe0e5; }
+
+        #fileNameDisplay {
+            margin-left: 10px;
+            font-size: 13px;
+            color: #ccc;
+            font-style: italic;
+        }
+
+        /* Dil Seçimi Stili */
+        .language-select {
+            background-color: #1e1e1e;
+            color: #ccc;
+            border: 1px solid #444;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
+        }
+        button:hover { background-color: #0056b3; }
+        .loading { display: none; margin-top: 15px; color: #aaa; }
+        .error-msg { color: #ff6b6b; margin-bottom: 15px; }
+    </style>
+</head>
+<body class="landing-page">
+
+    <div class="input-card">
+        <h1 id="lblTitle">AtakSlide V1.0</h1>
+
+        {% if error %}
+        <div class="error-msg">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" onsubmit="document.querySelector('.loading').style.display='block'">
+
+            <textarea id="inpPrompt" name="user_prompt" placeholder="Sunum konusunu yazın (Örn: Elektrikli Araçların Geleceği)..." required></textarea>
+
+            <div class="form-group">
+                <label id="lblLang" class="form-label">Arayüz Dili / Interface Language:</label>
+                <select id="selLang" name="ui_language" class="language-select" onchange="updateLandingLanguage()">
+                    <option value="tr" selected>Türkçe</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="border: 1px dashed #555; padding: 15px; border-radius: 5px;">
+                <label id="lblFile" class="form-label">Görsel veya PDF Kaynağı Yükle (İsteğe Bağlı):</label>
+
+                <div style="display:flex; align-items:center;">
+                    <label for="realFileInput" class="custom-file-btn" id="lblFileBtn">Dosya Seç</label>
+                    <span id="fileNameDisplay">Dosya seçilmedi</span>
+                    <input type="file" id="realFileInput" name="file_upload" accept=".pdf, .jpg, .jpeg, .png" style="display: none;" onchange="updateFileName()">
+                </div>
+
+                <div id="lblFileSub" style="font-size: 11px; color: #666; margin-top: 5px;">Desteklenenler: PDF, JPG, PNG</div>
+            </div>
+
+            <button id="btnSubmit" type="submit">Sunumu Oluştur</button>
+        </form>
+
+        <div class="loading" id="loadingDiv">
+            <div style="margin-bottom: 5px;">⏳</div>
+            <span id="txtLoadingMain">Dosyalar analiz ediliyor ve sunum hazırlanıyor...</span><br>
+            <small id="txtLoadingSub">(Bu işlem dosya boyutuna göre biraz sürebilir)</small>
+        </div>
+    </div>
+
+    <script>
+        const langData = {
+            tr: {
+                placeholder: "Sunum konusunu yazın (Örn: Elektrikli Araçların Geleceği)...",
+                labelLang: "Arayüz Dili / Interface Language:",
+                labelFile: "Görsel veya PDF Kaynağı Yükle (İsteğe Bağlı):",
+                labelFileSub: "Desteklenenler: PDF, JPG, PNG",
+                btnText: "Sunumu Oluştur",
+                loadingMain: "Dosyalar analiz ediliyor ve sunum hazırlanıyor...",
+                loadingSub: "(Bu işlem dosya boyutuna göre biraz sürebilir)",
+                btnFileSelect: "Dosya Seç",
+                txtNoFile: "Dosya seçilmedi"
+            },
+            en: {
+                placeholder: "Enter presentation topic (e.g. Future of Electric Vehicles)...",
+                labelLang: "Interface Language:",
+                labelFile: "Upload Image or PDF Source (Optional):",
+                labelFileSub: "Supported: PDF, JPG, PNG",
+                btnText: "Generate Presentation",
+                loadingMain: "Analyzing files and generating presentation...",
+                loadingSub: "(This process might take a while based on file size)",
+                btnFileSelect: "Choose File",
+                txtNoFile: "No file selected"
+            }
+        };
+
+        function updateLandingLanguage() {
+            const lang = document.getElementById('selLang').value;
+            const t = langData[lang];
+
+            document.getElementById('inpPrompt').placeholder = t.placeholder;
+            document.getElementById('lblLang').innerText = t.labelLang;
+            document.getElementById('lblFile').innerText = t.labelFile;
+            document.getElementById('lblFileSub').innerText = t.labelFileSub;
+            document.getElementById('btnSubmit').innerText = t.btnText;
+            document.getElementById('txtLoadingMain').innerText = t.loadingMain;
+            document.getElementById('txtLoadingSub').innerText = t.loadingSub;
+            document.getElementById('lblFileBtn').innerText = t.btnFileSelect;
+
+            // Dosya seçili değilse "seçilmedi" yazısını da güncelle, seçiliyse dosya adı kalsın
+            const fileInput = document.getElementById('realFileInput');
+            if (fileInput.files.length === 0) {
+                document.getElementById('fileNameDisplay').innerText = t.txtNoFile;
+            }
+        }
+
+        function updateFileName() {
+            const input = document.getElementById('realFileInput');
+            const display = document.getElementById('fileNameDisplay');
+            if (input.files.length > 0) {
+                display.innerText = input.files[0].name;
+            } else {
+                const lang = document.getElementById('selLang').value;
+                display.innerText = langData[lang].txtNoFile;
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Radikal Farklı Tasarımlar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-dark: #050505; /* Simsiyah */
+            --text-main: #ffffff;
+            --accent-neon: #ccff00; /* Neon Sarı/Yeşil */
+            --accent-cyan: #00ffff;
+            --grid-line: #333;
+        }
+
+        body {
+            background-color: #111;
+            font-family: 'Inter', sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 50px; padding: 40px; color: var(--text-main);
+        }
+
+        .slide-frame {
+            width: 1100px; height: 600px;
+            position: relative; overflow: hidden;
+            background: var(--bg-dark);
+            box-sizing: border-box;
+            /* Kenarlık yok, gölge yok - tamamen flat */
+        }
+
+        .label {
+            position: absolute; top: 0; left: 0;
+            background: #fff; color: #000;
+            padding: 5px 10px; font-size: 10px; font-weight: bold; z-index: 100;
+        }
+
+        /* ============================================================
+           1. MANIFESTO (TİPOGRAFİK GÜÇ)
+           Felsefe: "Kutu Yok". Yazı görselin kendisidir.
+           Kullanım: Bölüm başlangıcı, Vurucu slogan, Ana Fikir.
+           ============================================================ */
+        .manifesto-wrapper {
+            height: 100%; display: flex; flex-direction: column;
+            justify-content: center; padding: 0 60px;
+            background: radial-gradient(circle at 80% 20%, #222, #000);
+        }
+
+        .m-huge-text {
+            font-family: 'Anton', sans-serif; /* Çok kalın, dar font */
+            font-size: 140px; line-height: 0.9;
+            text-transform: uppercase;
+            color: #fff;
+            margin: 0;
+            letter-spacing: -2px;
+        }
+
+        .m-highlight {
+            color: transparent;
+            -webkit-text-stroke: 2px var(--accent-neon); /* Sadece kenar çizgisi */
+        }
+
+        .m-sub-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 24px; font-weight: 300;
+            margin-top: 30px; border-left: 4px solid var(--accent-neon);
+            padding-left: 20px; max-width: 600px;
+            color: #ccc;
+        }
+
+
+        /* ============================================================
+           2. THE BLUEPRINT (TEKNİK IZGARA)
+           Felsefe: "Kart Yok". Her şey bir sistemin parçası. Çizgiler görünür.
+           Kullanım: Veri, Teknik detay, Süreç.
+           ============================================================ */
+        .blueprint-wrapper {
+            height: 100%;
+            display: grid;
+            grid-template-columns: 250px 1fr 1fr;
+            grid-template-rows: 60px 1fr 1fr;
+            background-image:
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%; /* Sadece ana hatlar */
+            font-family: 'JetBrains Mono', monospace; /* Kod fontu */
+        }
+
+        /* Izgara Hücreleri */
+        .bp-cell {
+            border-right: 1px solid var(--grid-line);
+            border-bottom: 1px solid var(--grid-line);
+            padding: 20px; display: flex; flex-direction: column;
+            position: relative;
+        }
+
+        .bp-header {
+            grid-column: 1 / 4; /* Üst başlık boydan boya */
+            background: #111;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .bp-label { font-size: 10px; color: #666; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        .bp-val { font-size: 18px; color: var(--accent-cyan); }
+        .bp-text { font-size: 14px; color: #aaa; line-height: 1.5; margin-top: 10px; }
+
+        /* Köşelere + işareti koyarak teknik çizim havası verme */
+        .bp-cell::after {
+            content: '+'; position: absolute; bottom: -6px; right: -4px;
+            color: #555; font-size: 12px; background: var(--bg-dark);
+        }
+
+
+        /* ============================================================
+           3. GLASS STACK (DERİNLİK & KATMANLAR)
+           Felsefe: "Yan Yana Değil, Üst Üste". Derinlik hissi.
+           Kullanım: Adımlar, Hiyerarşi, Önem sırası.
+           ============================================================ */
+        .glass-wrapper {
+            height: 100%; position: relative;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        }
+
+        /* Arka planda dekoratif "blob" (ışık topu) */
+        .bg-blob {
+            position: absolute; width: 500px; height: 500px;
+            background: purple; filter: blur(100px); opacity: 0.3;
+            border-radius: 50%; top: 10%; left: 20%;
+        }
+
+        .glass-card {
+            position: absolute;
+            width: 600px; height: 200px;
+            background: rgba(255, 255, 255, 0.05); /* Çok şeffaf */
+            backdrop-filter: blur(10px); /* Buzlu cam efekti */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: 0.3s;
+            display: flex; align-items: center; gap: 20px;
+        }
+
+        /* Kartları üst üste bindirme (Offset) */
+        .gc-1 { top: 100px; left: 150px; z-index: 1; }
+        .gc-2 { top: 220px; left: 250px; z-index: 2; background: rgba(255, 255, 255, 0.1); border-color: rgba(255,255,255,0.3); }
+        .gc-3 { top: 340px; left: 350px; z-index: 3; background: rgba(255, 255, 255, 0.15); border-color: rgba(255,255,255,0.5); }
+
+        .gc-num {
+            font-size: 40px; font-weight: 800; color: rgba(255,255,255,0.2);
+            width: 60px; text-align: right;
+        }
+        .gc-content h3 { margin: 0; font-size: 20px; color: #fff; }
+        .gc-content p { margin: 5px 0 0 0; font-size: 14px; color: #ddd; }
+
+        .glass-card:hover { transform: scale(1.05); z-index: 10; background: rgba(255,255,255,0.2); }
+
+    </style>
+</head>
+<body>
+
+    <div class="slide-frame">
+        <div class="label">1. Manifesto (Tipografik)</div>
+        <div class="manifesto-wrapper">
+            <h1 class="m-huge-text" contenteditable="true">
+                YAPAY ZEKA <br>
+                <span class="m-highlight">DEVRİMİ</span>
+            </h1>
+            <div class="m-sub-text" contenteditable="true">
+                "Standart planlama yöntemlerini unutun. Artık kuralları veri, sınırları algoritmalar belirliyor."
+            </div>
+        </div>
+    </div>
+
+    <div class="slide-frame">
+        <div class="label">2. Blueprint (Teknik Grid)</div>
+        <div class="blueprint-wrapper">
+            <div class="bp-cell bp-header">
+                <span style="font-weight:bold; color:#fff;">SYS.CONFIG.V2</span>
+                <span style="color:#666;">MOD: OPTIMIZATION</span>
+            </div>
+
+            <div class="bp-cell" style="grid-row: 2/4;">
+                <span class="bp-label">STATUS</span>
+                <span class="bp-val" style="color:#0f0;">ACTIVE</span>
+                <br><br>
+                <span class="bp-label">LATENCY</span>
+                <span class="bp-val">12ms</span>
+                <br><br>
+                <span class="bp-label">MODEL</span>
+                <span class="bp-val">GPT-4</span>
+            </div>
+
+            <div class="bp-cell">
+                <span class="bp-label">INPUT STREAM</span>
+                <div class="bp-text" contenteditable="true">
+                    > PDF Dosyaları Yüklendi<br>
+                    > OCR Taraması Tamamlandı<br>
+                    > Veri Yapılandırması: JSON
+                </div>
+            </div>
+
+            <div class="bp-cell">
+                <span class="bp-label">PROCESSING</span>
+                <div class="bp-text" contenteditable="true">
+                    > Kısıt Analizi... [OK]<br>
+                    > Çizelgeleme... [OK]<br>
+                    > Çıktı Oluşturma... [OK]
+                </div>
+            </div>
+
+            <div class="bp-cell" style="grid-column: 2/4;">
+                <span class="bp-label">OUTPUT LOG</span>
+                <div class="bp-text" contenteditable="true" style="color:var(--accent-cyan);">
+                    Final rapor başarıyla oluşturuldu. Kullanıcı onayı bekleniyor.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide-frame">
+        <div class="label">3. Glass Stack (Derinlik)</div>
+        <div class="glass-wrapper">
+            <div class="bg-blob"></div>
+
+            <div class="glass-card gc-1">
+                <div class="gc-num">01</div>
+                <div class="gc-content">
+                    <h3 contenteditable="true">Temel Katman: Veri</h3>
+                    <p contenteditable="true">Ham verilerin toplanması ve işlenmesi aşaması.</p>
+                </div>
+            </div>
+
+            <div class="glass-card gc-2">
+                <div class="gc-num">02</div>
+                <div class="gc-content">
+                    <h3 contenteditable="true">İşlem Katmanı: Analiz</h3>
+                    <p contenteditable="true">Yapay zeka modellerinin veriyi yorumlaması.</p>
+                </div>
+            </div>
+
+            <div class="glass-card gc-3">
+                <div class="gc-num">03</div>
+                <div class="gc-content">
+                    <h3 contenteditable="true">Sunum Katmanı: Arayüz</h3>
+                    <p contenteditable="true">Kullanıcının etkileşime girdiği nihai sonuç ekranı.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

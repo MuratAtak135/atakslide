@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerPoint Tarzı Editör (Silme Düzeltildi)</title>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #333;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; margin: 0; overflow: hidden;
+        }
+
+        #canvas {
+            width: 1280px; height: 720px;
+            background-color: #0F172A;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        /* KUTU STİLİ */
+        .movable-box {
+            position: absolute;
+            box-sizing: border-box;
+            border: 1px dashed transparent; /* Normalde kenarlık yok */
+            touch-action: none; user-select: none;
+        }
+
+        /* Mouse üzerine gelince */
+        .movable-box:hover {
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            cursor: move;
+        }
+
+        /* SEÇİLİ OLMA DURUMU (ÖNEMLİ) */
+        .movable-box.selected {
+            border: 2px solid #38BDF8 !important; /* Mavi Çerçeve */
+            background-color: rgba(56, 189, 248, 0.05);
+            z-index: 100; /* Seçili olan en üste çıkar */
+        }
+
+        .editable-text {
+            width: 100%; height: 100%;
+            outline: none; cursor: text;
+        }
+
+        .main-title {
+            font-size: 80px; font-weight: 800; line-height: 1;
+            background: linear-gradient(135deg, #38BDF8, #6366F1);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .image-box {
+            background-size: cover; background-position: center; border-radius: 8px;
+        }
+
+        /* Araç Kutusu */
+        .toolbar {
+            position: absolute; top: 20px; right: 20px;
+            background: #222; padding: 10px; border-radius: 8px; z-index: 1000;
+        }
+        .btn { background: #444; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; }
+        .btn:hover { background: #666; }
+
+    </style>
+</head>
+<body>
+
+    <div class="toolbar">
+        <button class="btn" onclick="addTextBox()">+ Yazı Ekle</button>
+        <button class="btn" onclick="addImageBox()">+ Görsel Ekle</button>
+    </div>
+
+    <div id="canvas">
+
+        <div class="movable-box" style="transform: translate(100px, 100px); width: 600px; height: 250px;" data-x="100" data-y="100">
+            <div class="editable-text main-title" contenteditable="true">Başlık Buraya</div>
+        </div>
+
+        <div class="movable-box" style="transform: translate(100px, 400px); width: 500px; height: 150px;" data-x="100" data-y="400">
+            <div class="editable-text" style="color: white; font-size: 24px;" contenteditable="true">
+                Tıklayıp seçin, sonra 'Delete' tuşuyla silmeyi deneyin.
+            </div>
+        </div>
+
+        <div class="movable-box image-box" style="transform: translate(800px, 100px); width: 400px; height: 400px; background-image: url('https://picsum.photos/400/400');" data-x="800" data-y="100"></div>
+
+    </div>
+
+    <script>
+        // --- 1. SEÇİM YÖNETİMİ ---
+        let selectedElement = null;
+
+        // Kutuya tıklayınca seç
+        function selectBox(element) {
+            // Önceki seçimi kaldır
+            if (selectedElement) {
+                selectedElement.classList.remove('selected');
+            }
+            // Yeniyi seç
+            selectedElement = element;
+            selectedElement.classList.add('selected');
+        }
+
+        // Boşluğa tıklayınca seçimi kaldır
+        document.getElementById('canvas').addEventListener('click', function(e) {
+            // Eğer tıklanan yer canvas ise (kutu değilse) seçimi iptal et
+            if (e.target.id === 'canvas') {
+                if (selectedElement) {
+                    selectedElement.classList.remove('selected');
+                    selectedElement = null;
+                }
+            }
+        });
+
+        // Kutulara tıklama olayını dinle (Dinamik eklenenler için delegation)
+        document.getElementById('canvas').addEventListener('mousedown', function(e) {
+            const box = e.target.closest('.movable-box');
+            if (box) {
+                selectBox(box);
+            }
+        });
+
+        // --- 2. SİLME MANTIĞI (DELETE TUŞU) ---
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                // Eğer bir kutu seçiliyse
+                if (selectedElement) {
+                    // ÖNEMLİ KONTROL: Kullanıcı şu an yazı mı yazıyor?
+                    // Eğer 'contenteditable' bir alanda odaklanmışsa silme (harf silsin)
+                    const isEditingText = document.activeElement.isContentEditable;
+
+                    if (!isEditingText) {
+                        selectedElement.remove();
+                        selectedElement = null;
+                    }
+                }
+            }
+        });
+
+        // --- 3. SÜRÜKLE & BOYUTLANDIR (interact.js) ---
+        interact('.movable-box')
+            .draggable({
+                inertia: true,
+                ignoreFrom: '[contenteditable="true"]:focus', // Yazı yazarken sürükleme
+                modifiers: [
+                    interact.modifiers.restrictRect({
+                        restriction: 'parent',
+                        endOnly: true
+                    })
+                ],
+                autoScroll: true,
+                listeners: { move: dragMoveListener }
+            })
+            .resizable({
+                edges: { left: true, right: true, bottom: true, top: true },
+                listeners: {
+                    move: function (event) {
+                        var target = event.target;
+                        var x = (parseFloat(target.getAttribute('data-x')) || 0);
+                        var y = (parseFloat(target.getAttribute('data-y')) || 0);
+
+                        target.style.width = event.rect.width + 'px';
+                        target.style.height = event.rect.height + 'px';
+
+                        x += event.deltaRect.left;
+                        y += event.deltaRect.top;
+
+                        target.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+                        target.setAttribute('data-x', x);
+                        target.setAttribute('data-y', y);
+                    }
+                },
+                modifiers: [
+                    interact.modifiers.restrictSize({ min: { width: 50, height: 50 } })
+                ]
+            });
+
+        function dragMoveListener (event) {
+            var target = event.target;
+            var x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+            var y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+            target.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+            target.setAttribute('data-x', x);
+            target.setAttribute('data-y', y);
+        }
+
+        // --- 4. YENİ EKLEME FONKSİYONLARI ---
+        function addTextBox() {
+            const div = document.createElement('div');
+            div.className = 'movable-box';
+            div.style.cssText = 'transform: translate(300px, 300px); width: 300px; height: 100px;';
+            div.setAttribute('data-x', 300);
+            div.setAttribute('data-y', 300);
+            div.innerHTML = '<div class="editable-text" style="color:white; font-size:20px;" contenteditable="true">Yeni Metin</div>';
+            document.getElementById('canvas').appendChild(div);
+            selectBox(div); // Ekleyince otomatik seç
+        }
+
+        function addImageBox() {
+            const div = document.createElement('div');
+            div.className = 'movable-box image-box';
+            div.style.cssText = 'transform: translate(400px, 300px); width: 300px; height: 300px; background-image: url("https://picsum.photos/300/300");';
+            div.setAttribute('data-x', 400);
+            div.setAttribute('data-y', 300);
+            document.getElementById('canvas').appendChild(div);
+            selectBox(div);
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Layout 18: Feature Triad</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        :root { --bg: #0F172A; --card: #1E293B; --text: #F8FAFC; --accent: #38BDF8; }
+        body { font-family: 'Inter', sans-serif; background: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+
+        .slide-container {
+            width: 1280px; height: 720px; background: var(--bg); position: relative;
+            padding: 80px; display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        .header { text-align: center; margin-bottom: 50px; }
+        .h-title { font-size: 42px; font-weight: 700; color: white; margin: 0; }
+        .h-sub { font-size: 18px; color: #94A3B8; margin-top: 10px; }
+
+        .feature-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px;
+            height: 100%; align-items: stretch;
+        }
+
+        .feature-card {
+            background: var(--card); border-radius: 16px; padding: 40px 30px;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            border: 1px solid rgba(255,255,255,0.05); transition: transform 0.3s, box-shadow 0.3s;
+            position: relative; overflow: hidden; cursor: pointer;
+        }
+
+        /* Kartın üstüne renkli bir çizgi */
+        .feature-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+            background: var(--accent);
+        }
+
+        .feature-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .feature-card.selected { border: 2px solid #EF4444; }
+
+        .icon-box {
+            width: 80px; height: 80px; background: rgba(255,255,255,0.05); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; margin-bottom: 25px;
+            font-size: 32px; color: var(--accent);
+        }
+
+        .f-title { font-size: 24px; font-weight: 700; color: white; margin: 0 0 15px 0; }
+        .f-desc { font-size: 16px; color: #94A3B8; line-height: 1.6; }
+
+        [contenteditable]:focus { outline: none; background: rgba(255,255,255,0.05); border-radius: 4px; }
+        .toolbar { position: absolute; top: 20px; right: 20px; z-index: 999; display: flex; gap: 10px; }
+        .btn { background: #444; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <button class="btn" onclick="addCard()">+ Kart Ekle</button>
+    <button class="btn" onclick="setTheme('#38BDF8')">Mavi</button>
+    <button class="btn" onclick="setTheme('#10B981')">Yeşil</button>
+</div>
+
+<div class="slide-container" id="canvas">
+    <div class="header">
+        <h1 class="h-title" contenteditable="true">Öne Çıkan Özellikler</h1>
+        <p class="h-sub" contenteditable="true">Ürünümüzü benzersiz kılan temel yetenekler.</p>
+    </div>
+
+    <div class="feature-grid" id="grid">
+        <div class="feature-card" onclick="selectEl(this)">
+            <div class="icon-box">⚡</div>
+            <h3 class="f-title" contenteditable="true">Hızlı Performans</h3>
+            <p class="f-desc" contenteditable="true">Optimize edilmiş altyapı sayesinde %50 daha hızlı işlem kapasitesi.</p>
+        </div>
+        <div class="feature-card" onclick="selectEl(this)">
+            <div class="icon-box">🔒</div>
+            <h3 class="f-title" contenteditable="true">Tam Güvenlik</h3>
+            <p class="f-desc" contenteditable="true">Uçtan uca şifreleme ile verileriniz her zaman güvende.</p>
+        </div>
+        <div class="feature-card" onclick="selectEl(this)">
+            <div class="icon-box">∞</div>
+            <h3 class="f-title" contenteditable="true">Sınırsız Ölçek</h3>
+            <p class="f-desc" contenteditable="true">İhtiyaçlarınızla birlikte büyüyen esnek bulut mimarisi.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function setTheme(color) { document.documentElement.style.setProperty('--accent', color); }
+
+    function addCard() {
+        const grid = document.getElementById('grid');
+        // Grid sütun sayısını güncelle (4 karta kadar sığar, sonra küçülür)
+        grid.style.gridTemplateColumns = `repeat(${grid.children.length + 1}, 1fr)`;
+
+        const div = document.createElement('div');
+        div.className = 'feature-card';
+        div.onclick = function() { selectEl(this) };
+        div.innerHTML = `
+            <div class="icon-box">★</div>
+            <h3 class="f-title" contenteditable="true">Yeni Başlık</h3>
+            <p class="f-desc" contenteditable="true">Açıklama metni.</p>
+        `;
+        grid.appendChild(div);
+    }
+
+    let selected = null;
+    function selectEl(el) {
+        if(selected) selected.classList.remove('selected');
+        selected = el; selected.classList.add('selected');
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if((e.key === 'Delete' || e.key === 'Backspace') && selected && !document.activeElement.isContentEditable) {
+            selected.remove(); selected = null;
+            // Silince gridi düzelt
+            const grid = document.getElementById('grid');
+            grid.style.gridTemplateColumns = `repeat(${grid.children.length}, 1fr)`;
+        }
+    });
+</script>
+</body>
+</html>

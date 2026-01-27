@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Revize Tasarım: Ferah Liste & Temiz Kavram</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-surface: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #f472b6;
+            --accent-blue: #38bdf8;
+            --border-color: #334155;
+        }
+
+        body {
+            background-color: #000;
+            font-family: 'Inter', sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 50px; padding: 40px; color: var(--text-main);
+        }
+
+        .slide-container {
+            width: 1100px; height: 600px;
+            border: 1px dashed #444; position: relative;
+            background: var(--bg-dark); overflow: hidden;
+            padding: 40px; box-sizing: border-box;
+            display: flex; flex-direction: column;
+        }
+
+        .label {
+            position: absolute; top: 0; left: 0;
+            background: #222; padding: 5px 10px;
+            color: #888; font-size: 12px; text-transform: uppercase;
+        }
+
+        /* ============================================================
+           1. LİTERATÜR TARAMASI (Revize: Dikey Akış / Ferah)
+           Fark: Grid yerine Flex-Column kullanıldı. Genişlik %100.
+           ============================================================ */
+
+        .lit-stack-wrapper {
+            display: flex;
+            flex-direction: column; /* Alt alta dizilim */
+            gap: 15px; /* Kartlar arası boşluk */
+            height: 100%;
+            justify-content: center; /* Dikeyde ortala */
+        }
+
+        .lit-row {
+            display: flex;
+            align-items: flex-start;
+            background: rgba(255,255,255,0.02);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+            transition: transform 0.2s;
+        }
+
+        .lit-row:hover {
+            background: rgba(255,255,255,0.05);
+            transform: translateX(5px);
+        }
+
+        .lit-info {
+            flex-shrink: 0;
+            width: 140px;
+            display: flex; flex-direction: column; gap: 5px;
+            margin-right: 20px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .lit-year {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent); font-weight: bold; font-size: 14px;
+        }
+        .lit-method { font-size: 11px; color: var(--text-muted); opacity: 0.8; }
+
+        .lit-content { flex: 1; }
+        .lit-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px; color: var(--text-main);
+            margin-bottom: 5px; line-height: 1.2;
+        }
+        .lit-desc { font-size: 14px; color: var(--text-muted); font-style: italic; }
+
+
+        /* ============================================================
+           2. KAVRAM AĞI (Revize: Merkezi Blok / Işınsız)
+           Fark: "position: absolute" ve çizgiler yok. Flexbox 3 kolon.
+           ============================================================ */
+
+        .concept-clean-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 40px; /* Bloklar arası mesafe */
+        }
+
+        /* Sol ve Sağ Kolonlar */
+        .side-column {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            width: 280px;
+        }
+
+        /* Merkez Kolon */
+        .center-column {
+            width: 280px;
+            display: flex; justify-content: center;
+        }
+
+        /* Kutuların Ortak Stili (PPT dostu: Basit kutular) */
+        .concept-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: left;
+            display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: 0.2s;
+        }
+
+        /* Merkez Kutu Stili */
+        .main-topic-box {
+            background: linear-gradient(135deg, var(--bg-surface), #263344);
+            border: 2px solid var(--accent-blue);
+            width: 100%; aspect-ratio: 1; /* Kare olması için */
+            border-radius: 50%; /* Daire */
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.15);
+        }
+
+        /* İkon Kutusu */
+        .c-icon {
+            width: 40px; height: 40px;
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent-blue);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+
+        .c-text h4 { margin: 0 0 4px 0; font-size: 16px; color: var(--text-main); }
+        .c-text p { margin: 0; font-size: 12px; color: var(--text-muted); }
+
+        .main-title { font-size: 22px; font-weight: 800; color: #fff; line-height: 1.2; text-transform: uppercase; }
+        .main-sub { font-size: 12px; color: var(--accent-blue); margin-top: 5px; letter-spacing: 2px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="slide-container">
+        <div class="label">Literatür Taraması (Revize: Liste Düzeni)</div>
+        <h2 style="margin: 0 0 20px 0; font-family:'Playfair Display', serif;">İlgili Çalışmalar</h2>
+
+        <div class="lit-stack-wrapper">
+
+            <div class="lit-row">
+                <div class="lit-info">
+                    <span class="lit-year">2023</span>
+                    <span class="lit-method">Kantitatif</span>
+                </div>
+                <div class="lit-content">
+                    <div class="lit-title" contenteditable="true">Yılmaz ve Demir: Vardiya Sistemlerinde Adalet</div>
+                    <div class="lit-desc" contenteditable="true">"Çalışanların %65'i manuel planlamada adaletsizlik hissettiğini belirtmiştir."</div>
+                </div>
+            </div>
+
+            <div class="lit-row">
+                <div class="lit-info">
+                    <span class="lit-year">2022</span>
+                    <span class="lit-method">Vaka Analizi</span>
+                </div>
+                <div class="lit-content">
+                    <div class="lit-title" contenteditable="true">Smith et al.: Perakende Sektöründe AI</div>
+                    <div class="lit-desc" contenteditable="true">"Yapay zeka destekli çizelgeleme, maliyetleri %15 düşürmüştür."</div>
+                </div>
+            </div>
+
+            <div class="lit-row">
+                <div class="lit-info">
+                    <span class="lit-year">2021</span>
+                    <span class="lit-method">Karma Yöntem</span>
+                </div>
+                <div class="lit-content">
+                    <div class="lit-title" contenteditable="true">Johnson: Çalışan Memnuniyeti ve Verimlilik</div>
+                    <div class="lit-desc" contenteditable="true">"Esnek vardiya ile bağlılık arasında pozitif korelasyon bulundu."</div>
+                </div>
+            </div>
+
+            <div class="lit-row">
+                <div class="lit-info">
+                    <span class="lit-year">2024</span>
+                    <span class="lit-method">Simülasyon</span>
+                </div>
+                <div class="lit-content">
+                    <div class="lit-title" contenteditable="true">Öztürk: Kısıt Programlama Modelleri</div>
+                    <div class="lit-desc" contenteditable="true">"Hibrit model, çözüm süresini 3 kat hızlandırmıştır."</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="slide-container">
+        <div class="label">Kavram Ağı (Revize: Merkezi Blok Sistemi)</div>
+
+        <div class="concept-clean-wrapper">
+
+            <div class="side-column">
+                <div class="concept-box">
+                    <div class="c-icon"><i class="fas fa-balance-scale"></i></div>
+                    <div class="c-text">
+                        <h4 contenteditable="true">Adalet Ölçütleri</h4>
+                        <p contenteditable="true">Eşit iş yükü dağılımı</p>
+                    </div>
+                </div>
+                <div class="concept-box">
+                    <div class="c-icon"><i class="fas fa-users"></i></div>
+                    <div class="c-text">
+                        <h4 contenteditable="true">Çalışan Tercihleri</h4>
+                        <p contenteditable="true">İzin ve saat talepleri</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="center-column">
+                <div class="main-topic-box">
+                    <div class="main-title" contenteditable="true">VARDİYA<br>PLANLAMA</div>
+                    <div class="main-sub">ANA SİSTEM</div>
+                </div>
+            </div>
+
+            <div class="side-column">
+                <div class="concept-box">
+                    <div class="c-icon"><i class="fas fa-gavel"></i></div>
+                    <div class="c-text">
+                        <h4 contenteditable="true">Yasal Kısıtlar</h4>
+                        <p contenteditable="true">Maksimum çalışma süresi</p>
+                    </div>
+                </div>
+                <div class="concept-box">
+                    <div class="c-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="c-text">
+                        <h4 contenteditable="true">Maliyet Analizi</h4>
+                        <p contenteditable="true">Mesai optimizasyonu</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
