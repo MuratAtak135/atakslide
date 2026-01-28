@@ -1,6 +1,8 @@
 import os
 import json
 import base64
+import uuid
+import traceback
 import fitz  # PyMuPDF
 from flask import Flask, render_template, request
 from openai import OpenAI
@@ -11,16 +13,21 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# --- DEĞİŞİKLİK BURADA: Tam dosya yolu (Absolute Path) tanımlandı ---
+# --- RENDER İÇİN EN GÜVENLİ DOSYA YOLU AYARI ---
+# os.getcwd() yerine dosyanın bulunduğu klasörü baz alıyoruz.
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['UPLOAD_FOLDER'] = os.path.join(basedir, 'static/uploads')
-# --------------------------------------------------------------------
+app.config['UPLOAD_FOLDER'] = os.path.join(basedir, 'static', 'uploads')
+# -----------------------------------------------
 
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
 
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
+# Klasör yoksa oluştur (Hata durumunda log basar)
+try:
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+except Exception as e:
+    print(f"Klasör oluşturma hatası: {e}")
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -37,7 +44,6 @@ def encode_image(image_path):
 def analyze_image_content(image_path, filename):
     try:
         base64_image = encode_image(image_path)
-        # Analiz için token limitini düşük tutuyoruz (hız için)
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -52,33 +58,49 @@ def analyze_image_content(image_path, filename):
             max_completion_tokens=4000
         )
         return f"DOSYA ADI: '{filename}' -> İÇERİK: {response.choices[0].message.content}"
-    except:
-        return f"DOSYA ADI: '{filename}' -> Analiz edilemedi."
+    except Exception as e:
+        return f"DOSYA ADI: '{filename}' -> Analiz hatası: {str(e)}"
 
 
 def process_uploaded_pdf(filepath):
     full_text, saved_images = "", []
+
     try:
         doc = fitz.open(filepath)
+        # Dosya adını güvenli hale getirelim
         base_filename = os.path.splitext(os.path.basename(filepath))[0]
+
         for i, page in enumerate(doc):
-            t = page.get_text()
-            if t: full_text += f"\n--- SAYFA {i + 1} ---\n{t}\n"
-            for idx, img in enumerate(page.get_images(full=True)):
-                try:
-                    xref = img[0]
-                    base = doc.extract_image(xref)
-                    # Çok küçük ikonları filtrele (2KB altı)
-                    if len(base["image"]) > 2048:
-                        name = f"{base_filename}_p{i + 1}_i{idx + 1}.{base['ext']}"
-                        with open(os.path.join(app.config['UPLOAD_FOLDER'], name), "wb") as f:
-                            f.write(base["image"])
-                        saved_images.append(name)
-                except:
-                    continue
+            try:
+                t = page.get_text()
+                if t: full_text += f"\n--- SAYFA {i + 1} ---\n{t}\n"
+
+                # Görsel çıkarma
+                for idx, img in enumerate(page.get_images(full=True)):
+                    try:
+                        xref = img[0]
+                        base = doc.extract_image(xref)
+                        if len(base["image"]) > 2048:
+                            # Görseller için de UUID kullanalım ki çakışma olmasın
+                            img_filename = f"{base_filename}_p{i + 1}_{uuid.uuid4().hex[:8]}.{base['ext']}"
+                            save_path = os.path.join(app.config['UPLOAD_FOLDER'], img_filename)
+
+                            with open(save_path, "wb") as f:
+                                f.write(base["image"])
+                            saved_images.append(img_filename)
+                    except Exception as img_err:
+                        print(f"Görsel hatası: {img_err}")
+                        continue
+            except Exception as page_err:
+                print(f"Sayfa okuma hatası: {page_err}")
+                continue
+
         doc.close()
-    except:
+    except Exception as e:
+        print(f"PDF işleme genel hatası: {e}")
+        # Hatayı yukarı fırlatmıyoruz, metin okunduğu kadarıyla devam etsin
         pass
+
     return str(full_text), saved_images
 
 
@@ -88,35 +110,43 @@ def index():
         try:
             user_prompt = request.form.get('user_prompt')
             selected_theme = request.form.get('theme', 'default')
-            ui_language = request.form.get('ui_language', 'tr')  # Dil seçimi alındı
+            ui_language = request.form.get('ui_language', 'tr')
             f = request.files.get('file_upload')
 
             if not user_prompt and (not f or f.filename == ''):
                 return render_template('index.html', error="Lütfen bir konu yazın veya dosya yükleyin.")
 
             txt, imgs, analyses = "", [], []
+
             if f and allowed_file(f.filename):
-                fn = secure_filename(f.filename)
-                fp = os.path.join(app.config['UPLOAD_FOLDER'], fn)
+                # --- KRİTİK DÜZELTME: Türkçe karakter ve dosya yolu güvenliği ---
+                original_ext = f.filename.rsplit('.', 1)[1].lower()
+                # Dosyaya benzersiz bir isim ver (uuid)
+                unique_filename = f"{uuid.uuid4().hex}.{original_ext}"
+                fp = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+
+                print(f"Dosya kaydediliyor: {fp}")  # Loglar için
                 f.save(fp)
-                if fn.endswith('.pdf'):
+
+                if unique_filename.endswith('.pdf'):
+                    # PDF işleyiciye yeni dosya yolunu gönder
                     t, i = process_uploaded_pdf(fp)
                     txt, imgs = t, i
                 else:
-                    imgs.append(fn)
+                    imgs.append(unique_filename)
                     txt = "Kullanıcı görsel yükledi."
 
             # Görselleri analiz et
-            for i in imgs[:15]:  # Limit artırıldı
-                analyses.append(analyze_image_content(os.path.join(app.config['UPLOAD_FOLDER'], i), i))
+            for i in imgs[:15]:
+                img_path = os.path.join(app.config['UPLOAD_FOLDER'], i)
+                if os.path.exists(img_path):
+                    analyses.append(analyze_image_content(img_path, i))
 
             final_content = f"KULLANICI TALİMATI: {user_prompt}\n"
-            if txt: final_content += f"EK KAYNAK METNİ:\n{txt[:20000]}\n"  # Okuma limiti artırıldı
+            if txt: final_content += f"EK KAYNAK METNİ:\n{txt[:20000]}\n"
 
-            if analyses: final_content += f"KULLANILABİLİR GÖRSELLER VE İÇERİKLERİ:\n" + "\n".join(
-                analyses)
+            if analyses: final_content += f"KULLANILABİLİR GÖRSELLER VE İÇERİKLERİ:\n" + "\n".join(analyses)
 
-            # --- SİSTEM TALİMATI (AYNI KALDI) ---
             sys_prompt = """
             Sen profesyonel, detaycı ve akademik bir sunum tasarımcısısın.
 
@@ -185,11 +215,12 @@ def index():
             presentation_data = json.loads(response.choices[0].message.content)
             presentation_data['theme'] = selected_theme
 
-            # Dil seçeneğini viewer'a gönderiyoruz
             return render_template('viewer.html', data=presentation_data, ui_language=ui_language)
 
         except Exception as e:
-            return render_template('index.html', error=f"Hata: {str(e)}")
+            # Hata detayını terminale ve ekrana bas
+            traceback.print_exc()
+            return render_template('index.html', error=f"Sistem Hatası: {str(e)}")
 
     return render_template('index.html')
 
